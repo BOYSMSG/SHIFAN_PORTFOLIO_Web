@@ -26,15 +26,25 @@ function checkAdminAuth(req: NextRequest): boolean {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const isPublic = searchParams.get('public') === 'true';
+  const hasStatusParam = searchParams.has('status');
   const isAdmin = checkAdminAuth(req);
 
-  // If public request or not admin, return public discussion feed
-  if (isPublic || !isAdmin) {
+  // If explicitly requesting admin status views but not authenticated, fail closed
+  if (hasStatusParam && !isAdmin) {
+    return NextResponse.json(
+      { error: 'Unauthorized: Owner session required to access moderation queues.' },
+      { status: 401 }
+    );
+  }
+
+  // If public request or general community feed without admin status parameter
+  if (isPublic || !hasStatusParam) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const sortBy = (searchParams.get('sort') || 'hot') as 'hot' | 'top' | 'recent';
     const adminCookie = req.cookies.get('shifan_admin_session')?.value;
     const identity = await resolveCallerIdentity(req, adminCookie);
-    const result = await getPublicDiscussionList(page, limit, identity);
+    const result = await getPublicDiscussionList(page, limit, identity, sortBy);
     return NextResponse.json(result);
   }
 

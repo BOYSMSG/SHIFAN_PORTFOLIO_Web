@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:security": "node scripts/run_automated_tests.mjs",
+    "test:security": "tsx scripts/run_automated_tests.mjs",
     "test:visual": "node scripts/run_visual_qa.mjs"
   },
   "dependencies": {
@@ -29,6 +29,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.2",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.3"
   }
 }

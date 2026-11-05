@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   BarChart3,
   Calendar,
@@ -17,21 +18,28 @@ import {
 import { AnalyticsMetrics } from '@/lib/analytics';
 
 export default function AdminAnalyticsPage() {
+  const router = useRouter();
   const [range, setRange] = useState<'7d' | '30d' | '90d' | 'all'>('7d');
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [configured, setConfigured] = useState<boolean>(true);
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [sourceEngine, setSourceEngine] = useState<'umami' | 'supabase'>('supabase');
 
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/analytics?range=${range}`);
+      if (res.status === 401) {
+        router.push('/admin/login');
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setConfigured(Boolean(data.configured));
         setStatusMessage(data.message || '');
         setMetrics(data.metrics || null);
+        if (data.source) setSourceEngine(data.source);
       } else {
         setConfigured(false);
         setStatusMessage('Unauthorized or server error');
@@ -62,9 +70,25 @@ export default function AdminAnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
         <div>
-          <span className="text-xs font-mono font-bold text-electric-blue uppercase tracking-wider">
-            Privacy-First Telemetry
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-electric-blue uppercase tracking-wider">
+              Privacy-First Telemetry
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                sourceEngine === 'umami'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-electric-ice text-electric-blue border-electric-blue/30'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  sourceEngine === 'umami' ? 'bg-emerald-500 animate-pulse' : 'bg-electric-blue'
+                }`}
+              />
+              {sourceEngine === 'umami' ? 'Live Umami Engine' : 'Native Platform Telemetry'}
+            </span>
+          </div>
           <h1 className="text-3xl font-extrabold text-midnight-900 tracking-tight mt-1">
             Visitor &amp; Engagement Analytics
           </h1>

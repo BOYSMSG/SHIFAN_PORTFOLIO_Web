@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   MessageSquareText,
   Star,
@@ -24,6 +25,7 @@ import { FeedbackRecord, FeedbackReplyRecord, FeedbackRevisionRecord } from '@/l
 import { formatDateTimeIST } from '@/utils/dateFormatter';
 
 export default function AdminFeedbackPage() {
+  const router = useRouter();
   const [feedbackList, setFeedbackList] = useState<FeedbackRecord[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'google' | 'guest'>('all');
@@ -52,6 +54,10 @@ export default function AdminFeedbackPage() {
     setLoading(true);
     try {
       const res = await fetch(`/api/feedback?status=${statusFilter}`);
+      if (res.status === 401) {
+        router.push('/admin/login');
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setFeedbackList(data.feedback || []);

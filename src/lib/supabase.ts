@@ -63,6 +63,9 @@ export interface FeedbackRecord {
   is_spam: boolean;
   reports_count: number;
   replies_count: number;
+  likes_count?: number;
+  user_has_liked?: boolean;
+  hot_score?: number;
   replies?: FeedbackReplyRecord[];
   can_edit?: boolean;
   created_at: string;
@@ -390,32 +393,174 @@ export async function insertFeedback(data: {
 }
 
 /**
+ * Helper to fetch like counts and voter status for a set of feedback IDs
+ */
+async function getLikesMapForFeedback(
+  feedbackIds: string[],
+  voterHash?: string
+): Promise<{ counts: Record<string, number>; userLikes: Record<string, boolean> }> {
+  const adminClient = getSupabaseAdmin();
+  const counts: Record<string, number> = {};
+  const userLikes: Record<string, boolean> = {};
+
+  if (!adminClient || feedbackIds.length === 0) {
+    return { counts, userLikes };
+  }
+
+  try {
+    const keys = [
+      ...feedbackIds.map((id) => `like_cnt:${id}`),
+      ...(voterHash ? feedbackIds.map((id) => `like_vote:${id}:${voterHash}`) : []),
+    ];
+
+    const { data } = await adminClient
+      .from('persistent_rate_limits')
+      .select('key, count')
+      .in('key', keys);
+
+    if (data) {
+      for (const row of data) {
+        if (row.key.startsWith('like_cnt:')) {
+          const id = row.key.slice('like_cnt:'.length);
+          counts[id] = row.count || 0;
+        } else if (voterHash && row.key.startsWith('like_vote:')) {
+          const id = row.key.split(':')[1];
+          userLikes[id] = true;
+        }
+      }
+    }
+  } catch {}
+
+  return { counts, userLikes };
+}
+
+/**
+ * Atomic like / unlike toggle for feedback items
+ */
+export async function toggleFeedbackLike(
+  feedbackId: string,
+  voterHash: string
+): Promise<{ success: boolean; liked: boolean; likesCount: number; error?: string }> {
+  const adminClient = getSupabaseAdmin();
+  if (!adminClient) {
+    return { success: false, liked: false, likesCount: 0, error: 'Database service unavailable.' };
+  }
+
+  // 1. Try native RPC toggle_feedback_like if migration is active
+  try {
+    const { data: rpcData, error: rpcErr } = await adminClient.rpc('toggle_feedback_like', {
+      p_feedback_id: feedbackId,
+      p_voter_hash: voterHash,
+    });
+    if (!rpcErr && rpcData && typeof rpcData.liked === 'boolean') {
+      return {
+        success: true,
+        liked: rpcData.liked,
+        likesCount: rpcData.likes_count ?? 0,
+      };
+    }
+  } catch {}
+
+  // 2. High-resilience fallback using persistent_rate_limits
+  try {
+    const voteKey = `like_vote:${feedbackId}:${voterHash}`;
+    const countKey = `like_cnt:${feedbackId}`;
+
+    const { data: existingVote } = await adminClient
+      .from('persistent_rate_limits')
+      .select('key')
+      .eq('key', voteKey)
+      .maybeSingle();
+
+    let liked = false;
+    if (existingVote) {
+      // Remove like
+      await adminClient.from('persistent_rate_limits').delete().eq('key', voteKey);
+      liked = false;
+    } else {
+      // Insert like
+      await adminClient.from('persistent_rate_limits').upsert({
+        key: voteKey,
+        count: 1,
+        window_start: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+      });
+      liked = true;
+    }
+
+    // Get current total count
+    const { data: countRecord } = await adminClient
+      .from('persistent_rate_limits')
+      .select('count')
+      .eq('key', countKey)
+      .maybeSingle();
+
+    let currentCount = countRecord?.count || 0;
+    currentCount = liked ? currentCount + 1 : Math.max(0, currentCount - 1);
+
+    await adminClient.from('persistent_rate_limits').upsert({
+      key: countKey,
+      count: currentCount,
+      window_start: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+    });
+
+    // Also attempt to update feedback table if likes_count column exists
+    try {
+      await adminClient
+        .from('feedback')
+        .update({ likes_count: currentCount })
+        .eq('id', feedbackId);
+    } catch {}
+
+    return { success: true, liked, likesCount: currentCount };
+  } catch (err: any) {
+    return { success: false, liked: false, likesCount: 0, error: err?.message || 'Failed to toggle like.' };
+  }
+}
+
+/**
  * Public Discussion List (Non-hidden discussions with sanitized author hashes and authorized edit rights)
  */
 export async function getPublicDiscussionList(
   page = 1,
   limit = 10,
-  callerIdentity?: { hash?: string; isOwner?: boolean }
+  callerIdentity?: { hash?: string; isOwner?: boolean },
+  sortBy: 'hot' | 'top' | 'recent' = 'hot'
 ): Promise<{ discussions: FeedbackRecord[]; total: number; hasMore: boolean }> {
   const adminClient = getSupabaseAdmin();
 
   if (adminClient) {
     try {
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
-
       const { data: feedbackData, count, error } = await adminClient
         .from('feedback')
         .select('*, feedback_replies(*)', { count: 'exact' })
-        .eq('is_hidden', false)
-        .order('created_at', { ascending: false })
-        .range(from, to);
+        .eq('is_hidden', false);
 
       if (!error && feedbackData) {
+        const feedbackIds = feedbackData.map((fb) => fb.id);
+        const { counts: likesCounts, userLikes } = await getLikesMapForFeedback(
+          feedbackIds,
+          callerIdentity?.hash
+        );
+
         const sanitized = feedbackData.map((fb) => {
           const within24h = Date.now() - new Date(fb.created_at).getTime() < 24 * 60 * 60 * 1000;
           const isAuthor = Boolean(callerIdentity?.hash) && fb.author_id_hash === callerIdentity?.hash;
           const canEdit = Boolean(callerIdentity?.isOwner) || (isAuthor && within24h);
+          const likesCount = (fb.likes_count !== undefined && fb.likes_count !== null)
+            ? Number(fb.likes_count)
+            : (likesCounts[fb.id] || 0);
+          const userHasLiked = Boolean(userLikes[fb.id]);
+
+          // Trending / Hot score algorithm:
+          // HotScore = (Likes * 3.0 + Replies * 4.0 + RatingBonus + 1.0) / (Hours + 2.0)^1.25
+          const hoursSince = Math.max(0, (Date.now() - new Date(fb.created_at).getTime()) / (1000 * 60 * 60));
+          const ratingBonus = fb.rating >= 5 ? 2.5 : fb.rating >= 4 ? 1.5 : 0.5;
+          const repliesCount = Number(fb.replies_count || (fb.feedback_replies?.length || 0));
+          const engagementPoints = (likesCount * 3.0) + (repliesCount * 4.0) + ratingBonus + 1.0;
+          const timeDecay = Math.pow(hoursSince + 2.0, 1.25);
+          const hotScore = engagementPoints / timeDecay;
 
           return {
             id: fb.id,
@@ -426,7 +571,10 @@ export async function getPublicDiscussionList(
             is_edited: fb.is_edited,
             edited_at: fb.edited_at,
             created_at: fb.created_at,
-            replies_count: fb.replies_count,
+            replies_count: repliesCount,
+            likes_count: likesCount,
+            user_has_liked: userHasLiked,
+            hot_score: hotScore,
             can_edit: canEdit,
             replies: (fb.feedback_replies || [])
               .filter((r: FeedbackReplyRecord) => !r.is_hidden && !r.is_spam)
@@ -454,10 +602,33 @@ export async function getPublicDiscussionList(
               ),
           };
         }) as unknown as FeedbackRecord[];
+
+        // Apply ranking / sorting algorithm
+        if (sortBy === 'hot') {
+          sanitized.sort((a, b) => ((b.hot_score || 0) - (a.hot_score || 0)));
+        } else if (sortBy === 'top') {
+          sanitized.sort((a, b) => {
+            const diffLikes = (b.likes_count || 0) - (a.likes_count || 0);
+            if (diffLikes !== 0) return diffLikes;
+            const diffRating = b.rating - a.rating;
+            if (diffRating !== 0) return diffRating;
+            return (b.replies_count || 0) - (a.replies_count || 0);
+          });
+        } else {
+          // recent
+          sanitized.sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        }
+
+        const total = sanitized.length;
+        const from = (page - 1) * limit;
+        const paged = sanitized.slice(from, from + limit);
+
         return {
-          discussions: sanitized,
-          total: count || sanitized.length,
-          hasMore: count ? to + 1 < count : false,
+          discussions: paged,
+          total,
+          hasMore: from + limit < total,
         };
       }
 
@@ -681,8 +852,7 @@ export async function insertReply(params: {
         return { success: false, error: 'Duplicate reply detected. Please avoid submitting identical responses.' };
       }
 
-      const replyRecord: FeedbackReplyRecord = {
-        id: `reply-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      const insertPayload = {
         feedback_id: params.feedback_id,
         author_name: params.is_owner ? 'MSG — Owner' : params.author_name,
         author_type: params.author_type,
@@ -693,12 +863,11 @@ export async function insertReply(params: {
         is_hidden: false,
         is_spam: false,
         reports_count: 0,
-        created_at: new Date().toISOString(),
       };
 
       const { data: inserted, error: insertErr } = await adminClient
         .from('feedback_replies')
-        .insert(replyRecord)
+        .insert(insertPayload)
         .select()
         .single();
 

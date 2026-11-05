@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Users,
   Eye,
@@ -20,6 +21,7 @@ import { FeedbackRecord } from '@/lib/supabase';
 import { AnalyticsMetrics } from '@/lib/analytics';
 
 export default function AdminOverviewPage() {
+  const router = useRouter();
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
   const [recentFeedback, setRecentFeedback] = useState<FeedbackRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,11 @@ export default function AdminOverviewPage() {
           fetch('/api/admin/analytics?range=7d'),
           fetch('/api/feedback?status=all'),
         ]);
+
+        if (analyticsRes.status === 401 || feedbackRes.status === 401) {
+          router.push('/admin/login');
+          return;
+        }
 
         if (analyticsRes.ok) {
           const aData = await analyticsRes.json();
@@ -49,7 +56,7 @@ export default function AdminOverviewPage() {
     }
 
     loadData();
-  }, []);
+  }, [router]);
 
   return (
     <div className="space-y-8">

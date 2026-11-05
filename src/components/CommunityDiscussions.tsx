@@ -15,6 +15,8 @@ import {
   Sparkles,
   AlertCircle,
   RefreshCw,
+  Heart,
+  Flame,
 } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { FeedbackRecord, FeedbackReplyRecord, getSupabaseBrowser } from '@/lib/supabase';
@@ -26,6 +28,11 @@ export default function CommunityDiscussions() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
+
+  // Sorting & Like states
+  const [sortBy, setSortBy] = useState<'hot' | 'top' | 'recent'>('hot');
+  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+  const [likingIds, setLikingIds] = useState<Set<string>>(new Set());
 
   // Active reply form state
   const [currentUser, setCurrentUser] = useState<{ name: string; email?: string } | null>(null);
@@ -55,6 +62,26 @@ export default function CommunityDiscussions() {
 
   const prefersReducedMotion = useReducedMotion();
 
+  // Load liked items from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('shifan_liked_feedback_ids');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (typeof parsed === 'object' && parsed !== null) {
+          setLikedMap(parsed);
+        }
+      }
+    } catch {}
+  }, []);
+
+  const saveLikedMap = (newMap: Record<string, boolean>) => {
+    setLikedMap(newMap);
+    try {
+      localStorage.setItem('shifan_liked_feedback_ids', JSON.stringify(newMap));
+    } catch {}
+  };
+
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
     const headers: Record<string, string> = {};
     try {
@@ -69,19 +96,32 @@ export default function CommunityDiscussions() {
     return headers;
   };
 
-  const fetchDiscussions = async (pageNum = 1, append = false) => {
+  const fetchDiscussions = async (pageNum = 1, append = false, currentSort = sortBy) => {
     try {
       if (!append) setLoading(true);
       const authHeaders = await getAuthHeaders();
-      const res = await fetch(`/api/feedback?public=true&page=${pageNum}&limit=5`, {
+      const res = await fetch(`/api/feedback?public=true&page=${pageNum}&limit=5&sort=${currentSort}`, {
         headers: authHeaders,
       });
       if (res.ok) {
         const data = await res.json();
+        const incomingDiscussions: FeedbackRecord[] = data.discussions || [];
+
+        // Sync likedMap with incoming server user_has_liked
+        setLikedMap((prev) => {
+          const next = { ...prev };
+          for (const item of incomingDiscussions) {
+            if (item.user_has_liked !== undefined && item.user_has_liked) {
+              next[item.id] = true;
+            }
+          }
+          return next;
+        });
+
         if (append) {
-          setDiscussions((prev) => [...prev, ...(data.discussions || [])]);
+          setDiscussions((prev) => [...prev, ...incomingDiscussions]);
         } else {
-          setDiscussions(data.discussions || []);
+          setDiscussions(incomingDiscussions);
         }
         setTotal(data.total || 0);
         setHasMore(data.hasMore || false);
@@ -91,6 +131,87 @@ export default function CommunityDiscussions() {
       console.error('Failed to load discussions:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSortChange = (newSort: 'hot' | 'top' | 'recent') => {
+    if (newSort === sortBy) return;
+    setSortBy(newSort);
+    fetchDiscussions(1, false, newSort);
+  };
+
+  const handleLikeToggle = async (feedbackId: string) => {
+    if (likingIds.has(feedbackId)) return;
+
+    const isCurrentlyLiked = Boolean(likedMap[feedbackId]);
+    const nextLikedState = !isCurrentlyLiked;
+
+    // Optimistic UI update
+    const newLikedMap = { ...likedMap, [feedbackId]: nextLikedState };
+    saveLikedMap(newLikedMap);
+
+    setDiscussions((prev) =>
+      prev.map((item) => {
+        if (item.id === feedbackId) {
+          const currentCount = item.likes_count || 0;
+          return {
+            ...item,
+            likes_count: nextLikedState ? currentCount + 1 : Math.max(0, currentCount - 1),
+            user_has_liked: nextLikedState,
+          };
+        }
+        return item;
+      })
+    );
+
+    setLikingIds((prev) => new Set(prev).add(feedbackId));
+
+    try {
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch('/api/feedback/like', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        body: JSON.stringify({ feedbackId }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.likesCount !== undefined) {
+          setDiscussions((prev) =>
+            prev.map((item) =>
+              item.id === feedbackId ? { ...item, likes_count: data.likesCount } : item
+            )
+          );
+        }
+      } else {
+        // Revert on error
+        saveLikedMap({ ...likedMap, [feedbackId]: isCurrentlyLiked });
+        setDiscussions((prev) =>
+          prev.map((item) => {
+            if (item.id === feedbackId) {
+              const count = item.likes_count || 0;
+              return {
+                ...item,
+                likes_count: isCurrentlyLiked ? count + 1 : Math.max(0, count - 1),
+                user_has_liked: isCurrentlyLiked,
+              };
+            }
+            return item;
+          })
+        );
+      }
+    } catch {
+      // Revert on network exception
+      saveLikedMap({ ...likedMap, [feedbackId]: isCurrentlyLiked });
+    } finally {
+      setLikingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(feedbackId);
+        return next;
+      });
     }
   };
 
@@ -312,6 +433,49 @@ export default function CommunityDiscussions() {
             Real feedback from community visitors, developers, and official responses from BOYS MSG.
           </p>
         </div>
+
+        {/* Algorithm Sort Selector */}
+        <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-slate-200 shadow-2xs self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => handleSortChange('hot')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              sortBy === 'hot'
+                ? 'bg-electric-blue text-white shadow-xs'
+                : 'text-slate-600 hover:text-midnight-900 hover:bg-slate-50'
+            }`}
+            title="Ranked by active discussion, community likes, and recency decay"
+          >
+            <Flame className="w-3.5 h-3.5 text-amber-300" />
+            <span>Trending</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSortChange('top')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              sortBy === 'top'
+                ? 'bg-electric-blue text-white shadow-xs'
+                : 'text-slate-600 hover:text-midnight-900 hover:bg-slate-50'
+            }`}
+            title="Ranked by total likes and highest star rating"
+          >
+            <Star className="w-3.5 h-3.5" />
+            <span>Top Liked</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSortChange('recent')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              sortBy === 'recent'
+                ? 'bg-electric-blue text-white shadow-xs'
+                : 'text-slate-600 hover:text-midnight-900 hover:bg-slate-50'
+            }`}
+            title="Newest submissions first"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>Recent</span>
+          </button>
+        </div>
       </div>
 
       {/* Discussion List */}
@@ -456,6 +620,28 @@ export default function CommunityDiscussions() {
 
               {/* Thread Actions */}
               <div className="flex items-center gap-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
+                {/* Like Button */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={() => handleLikeToggle(item.id)}
+                  disabled={likingIds.has(item.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    likedMap[item.id]
+                      ? 'bg-rose-50 text-rose-600 border border-rose-200 shadow-2xs'
+                      : 'bg-slate-50 text-slate-600 hover:text-rose-600 hover:bg-rose-50/50 border border-slate-200/80'
+                  }`}
+                  title={likedMap[item.id] ? 'Liked! Click to remove like' : 'Like this feedback discussion'}
+                  aria-label={`Like feedback (${item.likes_count || 0} likes)`}
+                >
+                  <Heart
+                    className={`w-3.5 h-3.5 transition-all ${
+                      likedMap[item.id] ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'
+                    }`}
+                  />
+                  <span className="font-mono text-xs">{item.likes_count || 0}</span>
+                </motion.button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -465,7 +651,7 @@ export default function CommunityDiscussions() {
                   className="inline-flex items-center gap-1.5 font-semibold text-electric-blue hover:text-blue-700 transition-colors cursor-pointer"
                 >
                   <CornerDownRight className="w-3.5 h-3.5" />
-                  <span>Reply to Thread</span>
+                  <span>Reply ({item.replies_count || item.replies?.length || 0})</span>
                 </button>
 
                 {/* Edit Button (Authorized Owner or Original Author only) */}

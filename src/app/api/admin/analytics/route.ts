@@ -29,5 +29,6 @@ export async function GET(req: NextRequest) {
     configured: true,
     metrics: result.metrics,
     range,
+    source: result.source || 'supabase',
   });
 }
