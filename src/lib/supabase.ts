@@ -19,6 +19,7 @@ export interface FeedbackReplyRecord {
   is_hidden: boolean;
   is_spam: boolean;
   reports_count: number;
+  can_edit?: boolean;
   created_at: string;
   updated_at?: string;
 }
@@ -63,6 +64,7 @@ export interface FeedbackRecord {
   reports_count: number;
   replies_count: number;
   replies?: FeedbackReplyRecord[];
+  can_edit?: boolean;
   created_at: string;
   updated_at?: string;
 }
@@ -388,11 +390,12 @@ export async function insertFeedback(data: {
 }
 
 /**
- * Public Discussion List (Non-hidden discussions with sanitized author hashes)
+ * Public Discussion List (Non-hidden discussions with sanitized author hashes and authorized edit rights)
  */
 export async function getPublicDiscussionList(
   page = 1,
-  limit = 10
+  limit = 10,
+  callerIdentity?: { hash?: string; isOwner?: boolean }
 ): Promise<{ discussions: FeedbackRecord[]; total: number; hasMore: boolean }> {
   const adminClient = getSupabaseAdmin();
 
@@ -409,34 +412,48 @@ export async function getPublicDiscussionList(
         .range(from, to);
 
       if (!error && feedbackData) {
-        const sanitized = feedbackData.map((fb) => ({
-          id: fb.id,
-          guest_name: fb.guest_name,
-          rating: fb.rating,
-          message: fb.message,
-          section_tag: fb.section_tag,
-          is_edited: fb.is_edited,
-          edited_at: fb.edited_at,
-          created_at: fb.created_at,
-          replies_count: fb.replies_count,
-          replies: (fb.feedback_replies || [])
-            .filter((r: FeedbackReplyRecord) => !r.is_hidden && !r.is_spam)
-            .map((r: FeedbackReplyRecord) => ({
-              id: r.id,
-              feedback_id: r.feedback_id,
-              author_name: r.author_name,
-              author_type: r.author_type,
-              is_owner: r.is_owner,
-              content: r.content,
-              is_edited: r.is_edited,
-              edited_at: r.edited_at,
-              created_at: r.created_at,
-            }))
-            .sort(
-              (a: any, b: any) =>
-                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            ),
-        })) as unknown as FeedbackRecord[];
+        const sanitized = feedbackData.map((fb) => {
+          const within24h = Date.now() - new Date(fb.created_at).getTime() < 24 * 60 * 60 * 1000;
+          const isAuthor = Boolean(callerIdentity?.hash) && fb.author_id_hash === callerIdentity?.hash;
+          const canEdit = Boolean(callerIdentity?.isOwner) || (isAuthor && within24h);
+
+          return {
+            id: fb.id,
+            guest_name: fb.guest_name,
+            rating: fb.rating,
+            message: fb.message,
+            section_tag: fb.section_tag,
+            is_edited: fb.is_edited,
+            edited_at: fb.edited_at,
+            created_at: fb.created_at,
+            replies_count: fb.replies_count,
+            can_edit: canEdit,
+            replies: (fb.feedback_replies || [])
+              .filter((r: FeedbackReplyRecord) => !r.is_hidden && !r.is_spam)
+              .map((r: FeedbackReplyRecord) => {
+                const replyWithin24h = Date.now() - new Date(r.created_at).getTime() < 24 * 60 * 60 * 1000;
+                const isReplyAuthor = Boolean(callerIdentity?.hash) && r.author_id_hash === callerIdentity?.hash;
+                const canEditReply = Boolean(callerIdentity?.isOwner) || (isReplyAuthor && replyWithin24h);
+
+                return {
+                  id: r.id,
+                  feedback_id: r.feedback_id,
+                  author_name: r.author_name,
+                  author_type: r.author_type,
+                  is_owner: r.is_owner,
+                  content: r.content,
+                  is_edited: r.is_edited,
+                  edited_at: r.edited_at,
+                  created_at: r.created_at,
+                  can_edit: canEditReply,
+                };
+              })
+              .sort(
+                (a: any, b: any) =>
+                  new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              ),
+          };
+        }) as unknown as FeedbackRecord[];
         return {
           discussions: sanitized,
           total: count || sanitized.length,
@@ -466,31 +483,45 @@ export async function getPublicDiscussionList(
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const from = (page - 1) * limit;
-  const paged = visible.slice(from, from + limit).map((fb) => ({
-    id: fb.id,
-    guest_name: fb.guest_name,
-    rating: fb.rating,
-    message: fb.message,
-    section_tag: fb.section_tag,
-    is_edited: fb.is_edited,
-    edited_at: fb.edited_at,
-    created_at: fb.created_at,
-    replies_count: fb.replies_count,
-    replies: (fb.replies || [])
-      .filter((r) => !r.is_hidden && !r.is_spam)
-      .map((r) => ({
-        id: r.id,
-        feedback_id: r.feedback_id,
-        author_name: r.author_name,
-        author_type: r.author_type,
-        is_owner: r.is_owner,
-        content: r.content,
-        is_edited: r.is_edited,
-        edited_at: r.edited_at,
-        created_at: r.created_at,
-      }))
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
-  })) as unknown as FeedbackRecord[];
+  const paged = visible.slice(from, from + limit).map((fb) => {
+    const within24h = Date.now() - new Date(fb.created_at).getTime() < 24 * 60 * 60 * 1000;
+    const isAuthor = Boolean(callerIdentity?.hash) && fb.author_id_hash === callerIdentity?.hash;
+    const canEdit = Boolean(callerIdentity?.isOwner) || (isAuthor && within24h);
+
+    return {
+      id: fb.id,
+      guest_name: fb.guest_name,
+      rating: fb.rating,
+      message: fb.message,
+      section_tag: fb.section_tag,
+      is_edited: fb.is_edited,
+      edited_at: fb.edited_at,
+      created_at: fb.created_at,
+      replies_count: fb.replies_count,
+      can_edit: canEdit,
+      replies: (fb.replies || [])
+        .filter((r) => !r.is_hidden && !r.is_spam)
+        .map((r) => {
+          const replyWithin24h = Date.now() - new Date(r.created_at).getTime() < 24 * 60 * 60 * 1000;
+          const isReplyAuthor = Boolean(callerIdentity?.hash) && r.author_id_hash === callerIdentity?.hash;
+          const canEditReply = Boolean(callerIdentity?.isOwner) || (isReplyAuthor && replyWithin24h);
+
+          return {
+            id: r.id,
+            feedback_id: r.feedback_id,
+            author_name: r.author_name,
+            author_type: r.author_type,
+            is_owner: r.is_owner,
+            content: r.content,
+            is_edited: r.is_edited,
+            edited_at: r.edited_at,
+            created_at: r.created_at,
+            can_edit: canEditReply,
+          };
+        })
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
+    };
+  }) as unknown as FeedbackRecord[];
 
   return {
     discussions: paged,

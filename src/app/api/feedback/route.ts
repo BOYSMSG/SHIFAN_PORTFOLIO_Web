@@ -32,7 +32,9 @@ export async function GET(req: NextRequest) {
   if (isPublic || !isAdmin) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
-    const result = await getPublicDiscussionList(page, limit);
+    const adminCookie = req.cookies.get('shifan_admin_session')?.value;
+    const identity = await resolveCallerIdentity(req, adminCookie);
+    const result = await getPublicDiscussionList(page, limit, identity);
     return NextResponse.json(result);
   }
 

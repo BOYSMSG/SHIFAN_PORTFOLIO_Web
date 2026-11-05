@@ -18,6 +18,13 @@ export default function CinematicIntro() {
   };
 
   useEffect(() => {
+    // If opening with a deep hash anchor (e.g. #community, #projects), suppress intro to jump straight to section
+    if (typeof window !== 'undefined' && window.location.hash && window.location.hash.length > 1) {
+      setVisible(false);
+      document.body.style.overflow = '';
+      return;
+    }
+
     // If already dismissed in this tab session (e.g. reload), suppress in post-hydration effect
     try {
       if (sessionStorage.getItem('shifan_intro_dismissed') === 'true') {

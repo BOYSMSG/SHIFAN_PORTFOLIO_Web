@@ -225,11 +225,13 @@ export default function Home() {
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('hashchange', handlePopState);
 
-    // Initial load hash detection
+    // Initial load hash detection (instant scroll + retry after DOM hydration)
     if (typeof window !== 'undefined' && window.location.hash) {
       const initialHash = window.location.hash.replace('#', '');
       if (SECTION_IDS.includes(initialHash as any)) {
-        setTimeout(() => handleNavigate(initialHash, false), 150);
+        handleNavigate(initialHash, false);
+        setTimeout(() => handleNavigate(initialHash, false), 80);
+        setTimeout(() => handleNavigate(initialHash, false), 350);
       }
     } else {
       determineActiveSection();

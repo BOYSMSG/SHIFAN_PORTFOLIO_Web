@@ -17,7 +17,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { FeedbackRecord, FeedbackReplyRecord } from '@/lib/supabase';
+import { FeedbackRecord, FeedbackReplyRecord, getSupabaseBrowser } from '@/lib/supabase';
 import { formatDateTimeIST, formatTimeAgo } from '@/utils/dateFormatter';
 
 export default function CommunityDiscussions() {
@@ -55,10 +55,27 @@ export default function CommunityDiscussions() {
 
   const prefersReducedMotion = useReducedMotion();
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const headers: Record<string, string> = {};
+    try {
+      const supabase = getSupabaseBrowser();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+    } catch {}
+    return headers;
+  };
+
   const fetchDiscussions = async (pageNum = 1, append = false) => {
     try {
       if (!append) setLoading(true);
-      const res = await fetch(`/api/feedback?public=true&page=${pageNum}&limit=5`);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`/api/feedback?public=true&page=${pageNum}&limit=5`, {
+        headers: authHeaders,
+      });
       if (res.ok) {
         const data = await res.json();
         if (append) {
@@ -87,9 +104,10 @@ export default function CommunityDiscussions() {
     setReplyError(null);
 
     try {
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/feedback/replies', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           feedback_id: feedbackId,
           content: replyText.trim(),
@@ -130,9 +148,10 @@ export default function CommunityDiscussions() {
     setEditError(null);
 
     try {
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/feedback', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           id,
           message: editFeedbackText.trim(),
@@ -167,9 +186,10 @@ export default function CommunityDiscussions() {
     setEditReplyError(null);
 
     try {
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/feedback/replies', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           id: replyId,
           content: editReplyText.trim(),
@@ -411,8 +431,8 @@ export default function CommunityDiscussions() {
                   <span>Reply to Thread</span>
                 </button>
 
-                {/* Edit Button (Available if created within last 24h) */}
-                {Date.now() - new Date(item.created_at).getTime() < 24 * 60 * 60 * 1000 && (
+                {/* Edit Button (Authorized Owner or Original Author only) */}
+                {item.can_edit && (
                   <button
                     type="button"
                     onClick={() => {
@@ -542,7 +562,8 @@ export default function CommunityDiscussions() {
                           </div>
 
                           <div className="flex items-center gap-1">
-                            {Date.now() - new Date(reply.created_at).getTime() < 24 * 60 * 60 * 1000 && (
+                            {/* Edit Button (Authorized Owner or Original Author only) */}
+                            {reply.can_edit && (
                               <button
                                 type="button"
                                 onClick={() => {
