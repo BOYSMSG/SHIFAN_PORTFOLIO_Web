@@ -1,0 +1,1 @@
+Audit against QA_CHECKLIST.md. Test desktop/tablet/mobile, keyboard and focus, contrast, reduced motion, intro skip, 3D fallback, image optimization, layout shift, links, contact flow, SEO, console/build errors, secrets and mobile performance. Return prioritized Critical/High/Medium/Low issues, exact files, fixes and test evidence. Do not deploy or change DNS.

@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F8FBFF;
+  --foreground: #182B45;
+  --cyan-glow: #00C9D8;
+  --blue-glow: #1677FF;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom High-Tech Holographic Grid */
+.bg-tech-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(22, 119, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 119, 255, 0.05) 1px, transparent 1px);
+}
+
+.bg-tech-dots {
+  background-image: radial-gradient(rgba(0, 201, 216, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Glassmorphism utility classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(22, 119, 255, 0.15);
+}
+
+.glass-panel-dark {
+  background: rgba(14, 25, 43, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 201, 216, 0.25);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(22, 119, 255, 0.18);
+}
+
+.text-gradient-electric {
+  background: linear-gradient(135deg, #1677FF 0%, #00C9D8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-dark {
+  background: linear-gradient(135deg, #0B1524 0%, #1677FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.electric-border-glow {
+  box-shadow: 0 0 25px rgba(0, 201, 216, 0.25), inset 0 0 15px rgba(22, 119, 255, 0.12);
+}
+
+.jarvis-glow {
+  box-shadow: 0 0 35px rgba(0, 201, 216, 0.35);
+}
+
+/* Hologram Scanning Line */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}
+
+/* Arc Reactor Pulse */
+@keyframes arcPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+    filter: drop-shadow(0 0 25px rgba(0, 201, 216, 0.8));
+  }
+}
+
+.animate-arc-pulse {
+  animation: arcPulse 4s ease-in-out infinite;
+}
+
+/* Zero-flicker reload suppression for cinematic intro */
+html.intro-dismissed #cinematic-intro-overlay {
+  display: none !important;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  [style*="opacity: 0"], [style*="opacity:0"] {
+    opacity: 1 !important;
+  }
+}
