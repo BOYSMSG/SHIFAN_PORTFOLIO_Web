@@ -4,6 +4,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  generateBuildId: async () => 'build-' + Date.now(),
   // Isolate dev cache from production build so `next build` never wipes out running dev CSS
   distDir: isDev ? '.next-dev' : '.next',
 };
