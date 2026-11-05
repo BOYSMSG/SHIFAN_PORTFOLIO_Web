@@ -47,8 +47,26 @@ export default function CinematicIntro() {
       dismiss();
     }, 1500);
 
+    // Fast-forward / instantly complete animation on mouse wheel, finger swipe, or scroll keys
+    const handleScrollInteraction = () => {
+      dismiss();
+    };
+
+    const handleKeyInteraction = (e: KeyboardEvent) => {
+      if (['ArrowDown', 'ArrowUp', 'Space', 'PageDown', 'PageUp'].includes(e.code)) {
+        dismiss();
+      }
+    };
+
+    window.addEventListener('wheel', handleScrollInteraction, { passive: true });
+    window.addEventListener('touchmove', handleScrollInteraction, { passive: true });
+    window.addEventListener('keydown', handleKeyInteraction, { passive: true });
+
     return () => {
       clearTimeout(timer);
+      window.removeEventListener('wheel', handleScrollInteraction);
+      window.removeEventListener('touchmove', handleScrollInteraction);
+      window.removeEventListener('keydown', handleKeyInteraction);
       document.body.style.overflow = '';
     };
   }, []);

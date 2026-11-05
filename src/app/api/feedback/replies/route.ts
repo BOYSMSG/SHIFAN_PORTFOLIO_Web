@@ -38,19 +38,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Reply content must be at least 2 characters long.' }, { status: 400 });
     }
 
-    const cleanAuthorName = identity.isOwner
-      ? 'MSG — Owner'
-      : identity.type === 'google'
-        ? identity.name
-        : (author_name && typeof author_name === 'string' && author_name.trim().length > 0)
-          ? author_name.trim().slice(0, 50)
-          : 'Guest Visitor';
+    // Strict authentication requirement: Only logged-in users (Google or Owner) can reply to community threads
+    if (identity.type !== 'google' && !identity.isOwner) {
+      return NextResponse.json(
+        { error: 'Authentication required: Please sign in with Google to reply to community threads.' },
+        { status: 401 }
+      );
+    }
+
+    const cleanAuthorName = identity.isOwner ? 'MSG — Owner' : identity.name;
+    const authorType = identity.isOwner ? 'owner' : 'google';
 
     const result = await insertReply({
       feedback_id,
       content: content.trim().slice(0, 1000),
       author_name: cleanAuthorName,
-      author_type: identity.isOwner ? 'owner' : identity.type === 'google' ? 'google' : 'guest',
+      author_type: authorType,
       author_id_hash: identity.hash,
       is_owner: identity.isOwner,
     });
