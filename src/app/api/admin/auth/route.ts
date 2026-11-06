@@ -54,45 +54,24 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid password. Please verify and retry.' }, { status: 401 });
       }
 
-      // Check if current IP is already recognized/trusted
-      const trusted = await isIpTrusted(ipHash);
-      if (trusted) {
-        // Direct authorized login for recognized trusted IP
-        const token = createSessionToken(cleanEmail, ipHash);
-        const res = NextResponse.json({
-          success: true,
-          trustedIp: true,
-          message: 'Welcome back! Recognized network authorized.',
-        });
-
-        res.cookies.set('shifan_admin_session', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/',
-          maxAge: 24 * 60 * 60, // 24 hours
-        });
-
-        return res;
-      }
-
-      // New or changed IP address: trigger Email OTP
-      const otp = await createOtp(cleanEmail, ipHash);
-      const emailResult = await sendOtpEmail(cleanEmail, otp, ip);
-
-      if (!emailResult.success) {
-        return NextResponse.json(
-          { error: 'Security passcode email dispatch failed. Please check server email configuration.' },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json({
+      // Direct authorized login for verified Admin Credentials
+      const token = createSessionToken(cleanEmail, ipHash);
+      const res = NextResponse.json({
         success: true,
-        requireOtp: true,
-        message: 'New network address detected. One-time security passcode dispatched to owner email.',
-        ...(process.env.NODE_ENV !== 'production' && emailResult.devMode ? { devMode: true, devOtp: otp } : {}),
+        directLogin: true,
+        trustedIp: true,
+        message: 'Welcome back, Mohd Shifan! Admin access granted.',
       });
+
+      res.cookies.set('shifan_admin_session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+      });
+
+      return res;
     }
 
     // ==========================================

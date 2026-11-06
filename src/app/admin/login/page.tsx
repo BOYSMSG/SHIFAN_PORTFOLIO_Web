@@ -42,13 +42,13 @@ export default function AdminLoginPage() {
         return;
       }
 
-      if (data.trustedIp) {
-        // Recognized IP, directly authorized!
-        setInfoMessage('Trusted IP recognized! Redirecting to Owner Console...');
+      if (data.success || data.trustedIp || data.directLogin) {
+        // Direct authorized login!
+        setInfoMessage('Authentication successful! Welcome, Mohd Shifan. Redirecting to Owner Console...');
         setTimeout(() => {
           router.push('/admin');
           router.refresh();
-        }, 800);
+        }, 500);
         return;
       }
 
@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
             </h1>
             <p className="text-xs text-slate-500 mt-1 max-w-xs">
               {step === 'credentials'
-                ? 'Authorized access for Mohd Shifan Gouri. Dual-layer IP & OTP protection active.'
+                ? 'Authorized access for Mohd Shifan Gouri. Master credentials verification.'
                 : `Enter the 6-digit verification code sent to ${email}`}
             </p>
           </div>
@@ -182,7 +182,7 @@ export default function AdminLoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="shifan@pokefun.in or shifangouri01@gmail.com"
+                    placeholder="msgboys832@gmail.com or boysmsg832@gmail.com"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-midnight-900 focus:bg-white focus:border-electric-blue focus:ring-2 focus:ring-electric-blue/20 transition-all outline-none"
                   />
                 </div>
