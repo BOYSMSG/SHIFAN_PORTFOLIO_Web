@@ -39,7 +39,7 @@ export const PORTFOLIO_DATA = {
     location: "India",
     subdomain: "shifan.pokefun.in",
     avatar: "/assets/boysmsg.png",
-    heroImage: "/assets/Golden Hour Rooftop Portrait(1).png",
+    heroImage: "/assets/shifan-hero-zoomed.jpg",
     projectArtwork: "/assets/YoutubeThumbnailDownload.com-HTIGNHNVafw-full-hd-(1280×720).jpg",
   },
 

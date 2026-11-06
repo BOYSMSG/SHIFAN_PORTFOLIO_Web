@@ -152,29 +152,29 @@ export default function HeroSection({ onNavigate }: HeroProps) {
               <div className="relative rounded-[28px] overflow-hidden bg-white/90 backdrop-blur-xl border border-white/80 shadow-2xl p-3 sm:p-4">
                 
                 {/* Real Rooftop Portrait Image */}
-                <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden bg-slate-100 shadow-inner">
+                <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-slate-100 shadow-inner">
                   <Image
                     src={profile.heroImage}
                     alt="Mohd Shifan Gouri - Golden Hour Rooftop Portrait"
                     fill
                     priority
-                    className="object-cover object-top group-hover:scale-102 transition-transform duration-700 ease-out"
+                    className="object-cover object-center group-hover:scale-102 transition-transform duration-700 ease-out"
                     sizes="(max-width: 768px) 100vw, 440px"
                   />
                   
                   {/* Subtle bottom gradient */}
-                  <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-midnight-900/80 via-midnight-900/30 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-midnight-900/80 via-midnight-900/25 to-transparent" />
                   
                   {/* Overlaid Badge */}
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white px-3 py-2.5 rounded-xl bg-midnight-900/70 backdrop-blur-md border border-white/10">
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white px-3 py-2 rounded-xl bg-midnight-900/75 backdrop-blur-md border border-white/10">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full overflow-hidden border border-electric-cyan relative">
+                      <div className="w-7 h-7 rounded-full overflow-hidden border border-electric-cyan relative">
                         <Image
                           src={profile.avatar}
                           alt="BOYS MSG Logo badge"
                           fill
                           className="object-cover"
-                          sizes="32px"
+                          sizes="28px"
                         />
                       </div>
                       <div>
