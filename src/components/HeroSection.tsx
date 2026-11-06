@@ -26,7 +26,7 @@ export default function HeroSection({ onNavigate }: HeroProps) {
   return (
     <section
       id="hero"
-      className="relative min-h-screen pt-28 pb-20 flex items-center justify-center overflow-hidden bg-gradient-to-b from-ice-50 via-white to-ice-100 scroll-mt-28"
+      className="relative pt-24 sm:pt-28 pb-10 sm:pb-14 flex flex-col justify-center overflow-hidden bg-gradient-to-b from-ice-50 via-white to-ice-100 scroll-mt-24"
     >
       {/* Refined Three.js Concentric Ripple Scene */}
       <Hero3DCanvas />
@@ -158,7 +158,7 @@ export default function HeroSection({ onNavigate }: HeroProps) {
                     alt="Mohd Shifan Gouri - Golden Hour Rooftop Portrait"
                     fill
                     priority
-                    className="object-cover object-center group-hover:scale-102 transition-transform duration-700 ease-out"
+                    className="object-cover object-top group-hover:scale-102 transition-transform duration-700 ease-out"
                     sizes="(max-width: 768px) 100vw, 440px"
                   />
                   

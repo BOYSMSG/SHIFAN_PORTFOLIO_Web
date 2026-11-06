@@ -9,7 +9,7 @@ export default function AboutSection() {
   const { profile } = PORTFOLIO_DATA;
 
   return (
-    <section id="about" className="py-24 bg-white relative scroll-mt-28 overflow-hidden">
+    <section id="about" className="pt-10 sm:pt-14 pb-20 sm:pb-24 bg-white relative scroll-mt-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
