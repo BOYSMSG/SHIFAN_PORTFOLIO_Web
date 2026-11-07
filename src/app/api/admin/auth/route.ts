@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
       }
 
       const storedHash = process.env.ADMIN_PASSWORD_HASH || '';
-      const passwordOk = verifyPassword(password, storedHash);
+      const cleanPassword = typeof password === 'string' ? password.trim() : '';
+      const passwordOk = verifyPassword(password, storedHash) || verifyPassword(cleanPassword, storedHash);
 
       if (!passwordOk) {
         return NextResponse.json({ error: 'Invalid password. Please verify and retry.' }, { status: 401 });

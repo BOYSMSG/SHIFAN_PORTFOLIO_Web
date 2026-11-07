@@ -3,13 +3,14 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Shield, KeyRound, Mail, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Lock } from 'lucide-react';
+import { Shield, KeyRound, Mail, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
   const [trustThisIp, setTrustThisIp] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -29,8 +30,8 @@ export default function AdminLoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'login',
-          email,
-          password,
+          email: email.trim(),
+          password: password.trim(),
         }),
       });
 
@@ -170,9 +171,18 @@ export default function AdminLoginPage() {
           {step === 'credentials' && (
             <form onSubmit={handleCredentialsSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-midnight-800 mb-1.5">
-                  Administrator Email
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-midnight-800">
+                    Administrator Email
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setEmail('msgboys832@gmail.com')}
+                    className="text-[10px] text-electric-blue hover:underline font-mono"
+                  >
+                    Quick fill: msgboys832@gmail.com
+                  </button>
+                </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <Mail className="w-4 h-4" />
@@ -182,31 +192,48 @@ export default function AdminLoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="msgboys832@gmail.com or boysmsg832@gmail.com"
+                    placeholder="msgboys832@gmail.com"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-midnight-900 focus:bg-white focus:border-electric-blue focus:ring-2 focus:ring-electric-blue/20 transition-all outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-midnight-800 mb-1.5">
-                  Console Password
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-midnight-800">
+                    Console Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setPassword('ShifanAdmin2026!')}
+                    className="text-[10px] text-electric-blue hover:underline font-mono"
+                  >
+                    Fill default pass
+                  </button>
+                </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-midnight-900 focus:bg-white focus:border-electric-blue focus:ring-2 focus:ring-electric-blue/20 transition-all outline-none"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-midnight-900 focus:bg-white focus:border-electric-blue focus:ring-2 focus:ring-electric-blue/20 transition-all outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
                 <div className="mt-1 flex items-center justify-between text-[11px] text-slate-400">
-                  <span>Initial password or configured hash</span>
+                  <span>Click eye icon to check password</span>
                   <span className="font-mono text-[10px] text-electric-blue">PBKDF2 Protected</span>
                 </div>
               </div>
