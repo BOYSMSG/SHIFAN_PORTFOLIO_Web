@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -134,6 +135,17 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
   }, []);
 
   const handleLinkClick = (id: string, href?: string, e?: React.MouseEvent) => {
+    if (href) {
+      if (mobileMenuOpen) {
+        closeDrawer();
+      }
+      if (typeof window !== 'undefined' && window.location.pathname === href) {
+        if (e) e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
     if (e) e.preventDefault();
     if (onNavigate) {
       onNavigate(id);
@@ -143,8 +155,6 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const targetTop = Math.max(0, element.getBoundingClientRect().top + window.scrollY - 88);
         window.scrollTo({ top: targetTop, behavior: prefersReduced ? 'instant' : 'smooth' });
-      } else if (href) {
-        window.location.href = href;
       } else {
         window.location.href = `/${id === 'hero' ? '' : '#' + id}`;
       }
@@ -166,9 +176,15 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
           }`}
         >
           {/* 1. Brand Area (Left) */}
-          <a
-            href="#hero"
-            onClick={(e) => handleLinkClick('hero', undefined, e)}
+          <Link
+            href="/"
+            onClick={(e) => {
+              if (typeof window !== 'undefined' && window.location.pathname === '/') {
+                handleLinkClick('hero', undefined, e);
+              } else if (mobileMenuOpen) {
+                closeDrawer();
+              }
+            }}
             className="flex items-center gap-2.5 flex-shrink-0 group rounded-lg py-1 pr-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue focus-visible:ring-offset-2"
           >
             <div className="relative w-8 h-8 rounded-full overflow-hidden border border-electric-cyan/70 shadow-sm transition-transform duration-300 group-hover:scale-105 flex-shrink-0">
@@ -189,22 +205,44 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
                 Mohd Shifan Gouri
               </span>
             </div>
-          </a>
+          </Link>
 
           {/* 2. Center Navigation Links (Desktop: 1024px, 1280px, 1365px, 1440px, 1920px) */}
           <div className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-1.5 flex-nowrap min-w-0">
             {NAV_LINKS.map((link) => {
               const isActive = activeSection === link.id;
+              const linkClasses = `relative px-2 lg:px-2.5 xl:px-3 py-1.5 rounded-xl text-xs xl:text-[13px] font-medium transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue focus-visible:ring-offset-1 ${
+                isActive
+                  ? 'text-electric-blue font-semibold'
+                  : 'text-slate-600 hover:text-midnight-900 hover:bg-slate-100/60'
+              }`;
+
+              if (link.href) {
+                return (
+                  <Link
+                    key={link.id}
+                    href={link.href}
+                    onClick={(e) => handleLinkClick(link.id, link.href, e)}
+                    className={linkClasses}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeNavPill"
+                        className="absolute inset-0 bg-electric-ice/80 border border-electric-blue/15 rounded-xl -z-10 shadow-sm"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    {link.label}
+                  </Link>
+                );
+              }
+
               return (
                 <a
                   key={link.id}
-                  href={link.href || `#${link.id}`}
+                  href={`/#${link.id}`}
                   onClick={(e) => handleLinkClick(link.id, link.href, e)}
-                  className={`relative px-2 lg:px-2.5 xl:px-3 py-1.5 rounded-xl text-xs xl:text-[13px] font-medium transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue focus-visible:ring-offset-1 ${
-                    isActive
-                      ? 'text-electric-blue font-semibold'
-                      : 'text-slate-600 hover:text-midnight-900 hover:bg-slate-100/60'
-                  }`}
+                  className={linkClasses}
                 >
                   {isActive && (
                     <motion.div
@@ -292,15 +330,31 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
               <div className="grid grid-cols-2 gap-1.5">
                 {NAV_LINKS.map((link) => {
                   const isActive = activeSection === link.id;
+                  const itemClasses = `text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue ${
+                    isActive
+                      ? 'bg-electric-ice text-electric-blue border border-electric-blue/20'
+                      : 'text-slate-700 hover:bg-slate-100/80'
+                  }`;
+
+                  if (link.href) {
+                    return (
+                      <Link
+                        key={link.id}
+                        href={link.href}
+                        onClick={(e) => handleLinkClick(link.id, link.href, e)}
+                        className={itemClasses}
+                      >
+                        {link.label}
+                      </Link>
+                    );
+                  }
+
                   return (
                     <button
                       key={link.id}
-                      onClick={() => handleLinkClick(link.id, link.href)}
-                      className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue ${
-                        isActive
-                          ? 'bg-electric-ice text-electric-blue border border-electric-blue/20'
-                          : 'text-slate-700 hover:bg-slate-100/80'
-                      }`}
+                      type="button"
+                      onClick={(e) => handleLinkClick(link.id, undefined, e)}
+                      className={itemClasses}
                     >
                       {link.label}
                     </button>

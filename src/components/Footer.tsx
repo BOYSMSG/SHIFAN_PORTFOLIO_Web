@@ -78,14 +78,15 @@ export default function Footer() {
           <div className="md:col-span-3 space-y-2">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">Portfolio Map</h4>
             <ul className="space-y-1.5 text-xs">
-              <li><Link href="#about" className="hover:text-electric-cyan transition-colors">About &amp; Ethos</Link></li>
-              <li><Link href="#journey" className="hover:text-electric-cyan transition-colors">Journey &amp; Education</Link></li>
-              <li><Link href="#projects" className="hover:text-electric-cyan transition-colors">Featured Systems</Link></li>
-              <li><Link href="#ventures" className="hover:text-electric-cyan transition-colors">Ventures &amp; Operations</Link></li>
-              <li><Link href="#skills" className="hover:text-electric-cyan transition-colors">Skills Arsenal</Link></li>
-              <li><Link href="#services" className="hover:text-electric-cyan transition-colors">Services (Coming Soon)</Link></li>
-              <li><Link href="#community" className="hover:text-electric-cyan transition-colors">Creator &amp; Communities</Link></li>
-              <li><Link href="#contact" className="hover:text-electric-cyan transition-colors">Contact Path</Link></li>
+              <li><Link href="/#about" className="hover:text-electric-cyan transition-colors">About &amp; Ethos</Link></li>
+              <li><Link href="/journal" className="hover:text-electric-cyan transition-colors">Developer Journal</Link></li>
+              <li><Link href="/projects" className="hover:text-electric-cyan transition-colors">All Projects</Link></li>
+              <li><Link href="/#journey" className="hover:text-electric-cyan transition-colors">Journey &amp; Education</Link></li>
+              <li><Link href="/#ventures" className="hover:text-electric-cyan transition-colors">Ventures &amp; Operations</Link></li>
+              <li><Link href="/#skills" className="hover:text-electric-cyan transition-colors">Skills Arsenal</Link></li>
+              <li><Link href="/#services" className="hover:text-electric-cyan transition-colors">Services (Coming Soon)</Link></li>
+              <li><Link href="/#community" className="hover:text-electric-cyan transition-colors">Creator &amp; Communities</Link></li>
+              <li><Link href="/#contact" className="hover:text-electric-cyan transition-colors">Contact Path</Link></li>
             </ul>
           </div>
 
