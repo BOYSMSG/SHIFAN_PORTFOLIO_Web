@@ -102,7 +102,7 @@ VALUES
     ARRAY['Java', 'PaperMC', 'Linux', 'MySQL', 'Webhooks', 'Discord API'],
     ARRAY['Configured and maintained PaperMC game server files, plugins, and permissions', 'Connected automated web store rank fulfillment via store.pokefun.in', 'Lead player community management, Discord moderation, and in-game events'],
     'active',
-    'https://pokefun.in/team',
+    'https://cobblemon.pokefun.in/',
     TRUE,
     1
   ),
@@ -118,7 +118,7 @@ VALUES
     ARRAY['Cobblemon Modding', 'Server Config', 'GeyserMC', 'Linux', 'Discord API'],
     ARRAY['Tested and tuned Cobblemon mod files and compatibility settings', 'Built Discord player support channels and troubleshooting guides', 'Iterated on configurations directly from player feedback and bug reports'],
     'active',
-    'https://cobblemon.pokefun.in/',
+    'https://cobbledrock.pokefun.in/',
     TRUE,
     2
   ),

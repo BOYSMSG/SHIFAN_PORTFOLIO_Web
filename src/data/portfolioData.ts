@@ -49,7 +49,7 @@ export const PORTFOLIO_DATA = {
     youtubePersonal: "https://www.youtube.com/@msgboys9723",
     youtubePokefun: "https://www.youtube.com/@Pokefunsmp",
     youtubeGaming: "https://www.youtube.com/@MSGbhai01",
-    pokefunTeam: "https://pokefun.in/team",
+    pokefunTeam: "https://cobblemon.pokefun.in/",
     discordPokefun: "https://discord.com/invite/NtE8QBkmwR",
     discordPokedrock: "https://discord.gg/9AU3kHZZDT",
     discordCobbleDrock: "https://discord.com/invite/reKPgCBguX",
@@ -78,8 +78,8 @@ export const PORTFOLIO_DATA = {
         "Integrates community web portals, player documentation, and store delivery links.",
         "Leads community moderation and organizes in-game player events.",
       ],
-      linkText: "Explore Pokefun Team",
-      linkUrl: "https://pokefun.in/team",
+      linkText: "Visit Pokefun",
+      linkUrl: "https://cobblemon.pokefun.in/",
     },
     {
       title: "Gouri Fashions",
@@ -113,7 +113,7 @@ export const PORTFOLIO_DATA = {
         "Lead player community management, Discord moderation, and in-game events",
       ],
       techStack: ["Java (Server Setup)", "Linux Basics", "MySQL", "Store Webhooks", "Community Management"],
-      url: "https://pokefun.in/team",
+      url: "https://cobblemon.pokefun.in/",
       image: "/assets/YoutubeThumbnailDownload.com-HTIGNHNVafw-full-hd-(1280×720).jpg",
     },
     {
@@ -130,7 +130,7 @@ export const PORTFOLIO_DATA = {
         "Iterated on configurations directly from player feedback and bug reports",
       ],
       techStack: ["Cobblemon Modding", "Server Config", "Community Support", "Discord API"],
-      url: "https://cobblemon.pokefun.in/",
+      url: "https://cobbledrock.pokefun.in/",
     },
     {
       id: "pokedrock",
