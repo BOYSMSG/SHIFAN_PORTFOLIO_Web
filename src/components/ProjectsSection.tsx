@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, ExternalLink, CheckCircle, RotateCw, Sparkles, Server, ArrowRight } from 'lucide-react';
@@ -194,22 +195,30 @@ export default function ProjectsSection() {
                         </div>
                       </div>
 
-                      <div className="pt-6 border-t border-slate-800 flex items-center justify-between">
-                        {project.url ? (
-                          <a
-                            href={project.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                      <div className="pt-6 border-t border-slate-800 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          {project.url && (
+                            <a
+                              href={project.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-midnight-900 bg-white hover:bg-slate-100 transition-colors"
+                            >
+                              <span>Live Site</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                          <Link
+                            href={`/projects/${project.id === 'pokefun' ? 'pokefun-network' : project.id === 'cobbledrock' ? 'cobbledrock' : project.id === 'pokedrock' ? 'pokedrock' : 'ai-workflow-engine'}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-midnight-900 bg-white hover:bg-slate-100 transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-electric-cyan border border-electric-cyan/40 hover:bg-electric-cyan hover:text-midnight-900 transition-colors"
                           >
-                            <span>Open Live Platform</span>
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        ) : (
-                          <span className="text-xs text-slate-400">Internal Framework</span>
-                        )}
-                        <span className="text-[11px] text-slate-400">Click card to flip</span>
+                            <span>Case Study</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        </div>
+                        <span className="text-[11px] text-slate-400">Click to flip</span>
                       </div>
                     </div>
                   </motion.div>
@@ -217,6 +226,18 @@ export default function ProjectsSection() {
               );
             })}
           </AnimatePresence>
+        </div>
+
+        {/* Explore All Projects Banner Button */}
+        <div className="mt-14 text-center">
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-electric-blue to-electric-cyan hover:shadow-cyan-glow transition-all duration-300"
+          >
+            <Layers className="w-4 h-4" />
+            <span>Explore All Projects &amp; Ventures Gallery</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
 
       </div>

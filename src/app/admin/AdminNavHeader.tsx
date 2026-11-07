@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { LayoutDashboard, MessageSquareText, BarChart3, LogOut, ShieldCheck, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, MessageSquareText, BarChart3, LogOut, ShieldCheck, ExternalLink, BookOpen, Layers } from 'lucide-react';
 
 export default function AdminNavHeader() {
   const pathname = usePathname();
@@ -40,6 +40,8 @@ export default function AdminNavHeader() {
 
   const navLinks = [
     { name: 'Overview', href: '/admin', icon: LayoutDashboard },
+    { name: 'Work Journal', href: '/admin/journal', icon: BookOpen },
+    { name: 'Projects', href: '/admin/projects', icon: Layers },
     { name: 'Feedback Inbox', href: '/admin/feedback', icon: MessageSquareText },
     { name: 'Visitor Analytics', href: '/admin/analytics', icon: BarChart3 },
   ];

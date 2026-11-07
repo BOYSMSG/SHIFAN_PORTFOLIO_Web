@@ -506,6 +506,75 @@ async function runTestSuite() {
   assert(hotSortRes.status === 200, 'Public discussions algorithmic Trending sort (/api/feedback?sort=hot) active');
 
   // ----------------------------------------------------
+  // TEST SUITE 11: DEVELOPER JOURNAL & LIVE PROJECT PORTFOLIO VERIFICATION
+  // ----------------------------------------------------
+  console.log('\n[SUITE 11] Public Developer Journal & Live Project Portfolio');
+
+  // 11.1: Public Projects API
+  const publicProjectsRes = await request('/api/projects');
+  assert(
+    publicProjectsRes.status === 200 && publicProjectsRes.json?.success,
+    'Public projects list (/api/projects) returns HTTP 200 with structured items',
+    `Found ${publicProjectsRes.json?.total || 0} projects`
+  );
+
+  // 11.2: Public Project by Slug
+  const pokefunProjectRes = await request('/api/projects/pokefun-network');
+  assert(
+    pokefunProjectRes.status === 200 && pokefunProjectRes.json?.project?.slug === 'pokefun-network',
+    'Project by slug (/api/projects/pokefun-network) returns case study and linked journal updates',
+    `Name: ${pokefunProjectRes.json?.project?.name || 'none'}`
+  );
+
+  // 11.3: Public Journal Feed API
+  const publicJournalRes = await request('/api/journal');
+  assert(
+    publicJournalRes.status === 200 && publicJournalRes.json?.success,
+    'Public developer journal feed (/api/journal) returns HTTP 200 with pagination metadata',
+    `Total entries: ${publicJournalRes.json?.total || 0}`
+  );
+
+  // 11.4: Public Journal Entry by Slug
+  const journalSlugRes = await request('/api/journal/pokefun-infrastructure-performance-tuning');
+  assert(
+    journalSlugRes.status === 200 && journalSlugRes.json?.entry?.slug === 'pokefun-infrastructure-performance-tuning',
+    'Single journal entry lookup (/api/journal/[slug]) retrieves entry with markdown content',
+    `Title: ${journalSlugRes.json?.entry?.title?.slice(0, 35)}...`
+  );
+
+  // 11.5: Admin Routes Protected Closed Without Session
+  const unauthAdminProj = await request('/api/admin/projects', {
+    method: 'POST',
+    body: { name: 'Untrusted Project' },
+  });
+  assert(
+    unauthAdminProj.status === 401,
+    'Unauthorized POST /api/admin/projects is strictly rejected with HTTP 401'
+  );
+
+  const unauthAdminJournal = await request('/api/admin/journal', {
+    method: 'POST',
+    body: { title: 'Untrusted Update', content: 'test' },
+  });
+  assert(
+    unauthAdminJournal.status === 401,
+    'Unauthorized POST /api/admin/journal is strictly rejected with HTTP 401'
+  );
+
+  // 11.6: Middleware Protection for New Admin Pages
+  const unauthAdminJournalPage = await request('/admin/journal');
+  assert(
+    unauthAdminJournalPage.status === 307 || unauthAdminJournalPage.status === 308,
+    'Unauthenticated GET /admin/journal is blocked by edge middleware redirect (HTTP 307/308)'
+  );
+
+  const unauthAdminProjectsPage = await request('/admin/projects');
+  assert(
+    unauthAdminProjectsPage.status === 307 || unauthAdminProjectsPage.status === 308,
+    'Unauthenticated GET /admin/projects is blocked by edge middleware redirect (HTTP 307/308)'
+  );
+
+  // ----------------------------------------------------
   // FINAL SUMMARY
   // ----------------------------------------------------
   console.log('\n======================================================');

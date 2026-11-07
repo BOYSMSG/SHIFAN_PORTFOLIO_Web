@@ -72,11 +72,66 @@ export interface FeedbackRecord {
   updated_at?: string;
 }
 
+export type ProjectCategory = 'Founder Venture' | 'Minecraft Architecture' | 'Web & Platform' | 'AI & Tools' | 'Open Source' | 'Infrastructure';
+export type ProjectStatus = 'planning' | 'in_development' | 'active' | 'completed' | 'paused' | 'archived';
+
+export interface ProjectRecord {
+  id: string;
+  slug: string;
+  name: string;
+  tagline: string;
+  category: ProjectCategory | string;
+  role: string;
+  short_description: string;
+  full_description?: string;
+  cover_image?: string;
+  technologies: string[];
+  highlights: string[];
+  start_date?: string;
+  completion_date?: string;
+  status: ProjectStatus;
+  github_url?: string;
+  demo_url?: string;
+  docs_url?: string;
+  external_links?: { title: string; url: string }[];
+  is_featured: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export type JournalCategory = 'Work Updates' | 'Features' | 'Bug Fixes' | 'Infrastructure' | 'Milestones' | 'Learning & Experiments' | 'Experiments' | 'Launches';
+export type JournalStatus = 'published' | 'draft';
+
+export interface JournalEntryRecord {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  content: string;
+  category: JournalCategory | string;
+  tags: string[];
+  cover_image?: string;
+  github_url?: string;
+  demo_url?: string;
+  project_id?: string | null;
+  project_name?: string;
+  external_links?: { title: string; url: string }[];
+  status: JournalStatus;
+  is_pinned: boolean;
+  views_count: number;
+  published_at: string;
+  created_at: string;
+  updated_at?: string;
+}
+
 const globalForDev = globalThis as unknown as {
   __devMemoryFeedbackStore?: FeedbackRecord[];
   __devMemoryRevisionsStore?: FeedbackRevisionRecord[];
   __devMemoryReportsStore?: FeedbackReportRecord[];
   __devMemoryRateLimitsStore?: Map<string, { count: number; windowStart: number }>;
+  __devMemoryProjectsStore?: ProjectRecord[];
+  __devMemoryJournalStore?: JournalEntryRecord[];
 };
 
 // Initial development sample data
@@ -1267,6 +1322,7 @@ export async function updateFeedbackStatus(
   return false;
 }
 
+
 /**
  * Delete feedback (Admin only)
  */
@@ -1292,6 +1348,7 @@ export async function deleteFeedbackRecord(id: string): Promise<boolean> {
 
   return false;
 }
+
 
 /**
  * Delete Reply (Admin only or Author)
@@ -1320,3 +1377,753 @@ export async function deleteReplyRecord(replyId: string): Promise<boolean> {
 
   return false;
 }
+
+
+// ============================================================
+// PROJECTS & DEVELOPER JOURNAL DATA ACCESS LAYER
+// ============================================================
+
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+const initialDevProjects: ProjectRecord[] = [
+  {
+    id: 'proj-pokefun',
+    slug: 'pokefun-network',
+    name: 'Pokefun Network & SMP',
+    tagline: 'Minecraft Community & Multiplayer Server Ecosystem',
+    category: 'Founder Venture',
+    role: 'Founder & Lead Server Architect',
+    short_description: 'A high-performance multiplayer Minecraft server community platform featuring SMP survival, custom Cobblemon systems, automated player rank delivery, and community events.',
+    full_description: `# Pokefun Network & SMP Ecosystem\n\nPokefun is an active multiplayer Minecraft community and server ecosystem founded and managed by **Mohd Shifan Gouri (BOYS MSG)**.\n\n### Architecture & Highlights\n- High-tickrate PaperMC server optimization with custom Java plugin tuning\n- Linux system administration, automated restart watchdogs, and daily backup rotations\n- Seamless web store rank delivery integration with instant player provisioning\n- Scalable community infrastructure serving thousands of active players and Discord community members\n\n### Technical Stack\n- **Engine:** PaperMC / Java\n- **Host:** High-Performance Linux VPS\n- **Data:** MySQL Relational Storage\n- **Integrations:** Automated Store Webhooks, Discord API`,
+    cover_image: '/assets/YoutubeThumbnailDownload.com-HTIGNHNVafw-full-hd-(1280×720).jpg',
+    technologies: ['Java', 'PaperMC', 'Linux', 'MySQL', 'Webhooks', 'Discord API'],
+    highlights: [
+      'Configured and maintained PaperMC game server files, plugins, and permissions',
+      'Connected automated web store rank fulfillment via store.pokefun.in',
+      'Lead player community management, Discord moderation, and in-game events',
+    ],
+    start_date: '2023',
+    status: 'active',
+    demo_url: 'https://pokefun.in/team',
+    is_featured: true,
+    display_order: 1,
+    created_at: new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'proj-cobbledrock',
+    slug: 'cobbledrock',
+    name: 'CobbleDrock',
+    tagline: 'Cobblemon & Bedrock Experience Network',
+    category: 'Minecraft Architecture',
+    role: 'Founder & Modpack Configurator',
+    short_description: 'A dedicated Cobblemon server setup integrating Pokémon-style gameplay mechanics into Minecraft with cross-platform tuning for Bedrock and Java players.',
+    full_description: `# CobbleDrock Modpack & Platform\n\nCobbleDrock bridges custom open-source Cobblemon mechanics with accessible Bedrock cross-play connectivity.\n\n### Engineering Highlights\n- Extensive compatibility benchmarking for item textures, movesets, and spawning curves\n- Optimized entity ticking rates to maintain constant 20.0 TPS under peak player load\n- Built dedicated community support pipelines and interactive troubleshooting guides`,
+    technologies: ['Cobblemon Modding', 'Server Config', 'GeyserMC', 'Linux', 'Discord API'],
+    highlights: [
+      'Tested and tuned Cobblemon mod files and compatibility settings',
+      'Built Discord player support channels and troubleshooting guides',
+      'Iterated on configurations directly from player feedback and bug reports',
+    ],
+    start_date: '2023',
+    status: 'active',
+    demo_url: 'https://cobbledrock.pokefun.in/',
+    is_featured: true,
+    display_order: 2,
+    created_at: new Date(Date.now() - 280 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'proj-pokedrock',
+    slug: 'pokedrock',
+    name: 'Pokedrock Platform',
+    tagline: 'Resource Hub & Player Portal',
+    category: 'Web & Platform',
+    role: 'Web Developer & Resource Curator',
+    short_description: 'A modern web portal providing installation tutorials, resource pack downloads, and connectivity guides for community players.',
+    full_description: `# Pokedrock Platform & Resource Hub\n\nPokedrock is a streamlined resource distribution platform for Minecraft players.\n\n### Features\n- Fast static CDN delivery for client resource packs and mod installation guides\n- Mobile-optimized responsive interface with step-by-step visual instructions\n- Integrated directly with Discord support channels for seamless player onboarding`,
+    technologies: ['HTML5', 'Tailwind CSS', 'JavaScript', 'Documentation CDN'],
+    highlights: [
+      'Designed and built responsive portal layout for smooth player onboarding',
+      'Curated and hosted client resource packs and mod installation steps',
+      'Connected download portal with Discord support channels',
+    ],
+    start_date: '2024',
+    status: 'active',
+    demo_url: 'https://pokedrock.pokefun.in/',
+    is_featured: false,
+    display_order: 3,
+    created_at: new Date(Date.now() - 180 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'proj-ai-workflow',
+    slug: 'ai-workflow-engine',
+    name: 'Applied AI Engineering Practice',
+    tagline: 'Prompt Architecture, Verification & Build Verification Gates',
+    category: 'Web & Platform',
+    role: 'Independent Developer',
+    short_description: 'A systematic engineering methodology combining modern Large Language Models with strict manual code inspection, automated regression testing, and verification gates.',
+    full_description: `# Applied AI Engineering Practice\n\nA rigorous personal software development workflow developed by Mohd Shifan Gouri.\n\n### Core Tenets\n- Strict specification and context scoping prior to code generation\n- Line-by-line manual code inspection—no blind copy-pasting\n- Automated TypeScript compilation and regression test suites before staging\n- Production-first security modeling with zero plaintext credentials`,
+    technologies: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Manual Code Review', 'Git'],
+    highlights: [
+      'Structured prompt workflows for rapid component scaffolding',
+      'Rigorous manual line-by-line review of all AI-generated code',
+      'Automated type checking and build verification gates prior to deployment',
+    ],
+    start_date: '2024',
+    status: 'active',
+    demo_url: 'https://shifan.pokefun.in/',
+    is_featured: false,
+    display_order: 4,
+    created_at: new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString(),
+  },
+];
+
+const initialDevJournal: JournalEntryRecord[] = [
+  {
+    id: 'journal-papermc-tuning',
+    slug: 'pokefun-infrastructure-performance-tuning',
+    title: 'Pokefun Infrastructure: PaperMC Performance Tuning & 20 TPS Optimization',
+    summary: 'Detailed breakdown of entity ticking optimizations, memory garbage collection parameters, and network packet compression on the Pokefun Linux host.',
+    content: `## Infrastructure & Performance Overview\n\nMaintaining a persistent 20.0 TPS (ticks per second) on an active Minecraft server with high entity counts requires methodical tuning across both the Java Virtual Machine and PaperMC configuration layers.\n\n### Key Optimizations Applied\n1. **Aikar Garbage Collection Flags:** Implemented fine-tuned G1GC parameters to eliminate multi-second garbage collection pauses during world chunk loading.\n2. **Entity Despawn Ranges & Ticking Limits:** Reduced unnecessary passive mob ticking outside player sight radiuses, recovering approximately **18% CPU headroom**.\n3. **Network Compression Threshold:** Tuned network compression to prevent network buffer bottlenecks while minimizing CPU compression overhead on high-frequency packets.\n\n### Results\n- Average server tick time decreased from 38ms to **19ms** under peak weekend traffic.\n- Zero player-reported rubberbanding during community tournament events.`,
+    category: 'Infrastructure',
+    tags: ['PaperMC', 'Linux', 'Java', 'Server Ops', 'Performance'],
+    project_id: 'proj-pokefun',
+    project_name: 'Pokefun Network & SMP',
+    status: 'published',
+    is_pinned: true,
+    views_count: 142,
+    published_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'journal-dynamic-release',
+    slug: 'dynamic-developer-journal-release',
+    title: 'Launching the Dynamic Developer Journal & Live Project Portfolio',
+    summary: 'Transformed the personal portfolio into a continuously updated living developer log featuring dynamic project management and GitHub integration.',
+    content: `## Why I Built the Developer Journal\n\nStatic portfolios get outdated fast. As developers, we build, debug, experiment, and deploy new things every week. I wanted a platform where I could publish daily progress, share GitHub repositories, and document milestones in real-time.\n\n### What Was Built\n- **Chronological Work Journal:** Markdown-powered timeline with categories, tags, and direct GitHub links.\n- **Dynamic Project Showcase:** Database-driven project cards and dedicated case study pages.\n- **Protected Admin Publishing Center:** Fast mobile-friendly publishing dashboard with draft preview support.\n- **GitHub API Integration:** Automated repository stars, language, and activity badge integration.\n\nNow, any visitor can see real-time engineering updates and explore code as it evolves.`,
+    category: 'Launches',
+    tags: ['Next.js', 'TypeScript', 'Supabase', 'Tailwind CSS', 'POKEDEVS'],
+    project_id: 'proj-ai-workflow',
+    project_name: 'Applied AI Engineering Practice',
+    status: 'published',
+    is_pinned: true,
+    views_count: 89,
+    published_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'journal-security-hardening',
+    slug: 'community-security-and-anti-abuse-hardening',
+    title: 'Architecting Server-Side Anti-Spam & Atomic Rate-Limiting Protection',
+    summary: 'How we hardened the community feedback and discussion system with atomic PostgreSQL rate limiting and IP-bound admin sessions.',
+    content: `## Security Engineering Summary\n\nWhen opening up public feedback and community discussions, robust abuse protection is mandatory.\n\n### Security Implementations\n- **Atomic PostgreSQL RPCs:** Rate limits enforced atomically in database transactions to prevent race conditions during concurrent visitor submissions.\n- **HMAC IP-Bound Sessions:** Admin cookies are cryptographically signed with PBKDF2 hashes and strictly bound to the verified reverse-proxy client IP.\n- **Zero Leaked Data:** Private voter hashes, reporter IPs, and moderation flags are strictly filtered out before sending responses to public clients.`,
+    category: 'Features',
+    tags: ['Security', 'PostgreSQL', 'Auth', 'Edge Middleware'],
+    project_id: 'proj-ai-workflow',
+    project_name: 'Applied AI Engineering Practice',
+    status: 'published',
+    is_pinned: false,
+    views_count: 67,
+    published_at: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
+  },
+];
+
+export const devMemoryProjectsStore: ProjectRecord[] =
+  globalForDev.__devMemoryProjectsStore ?? (globalForDev.__devMemoryProjectsStore = [...initialDevProjects]);
+
+export const devMemoryJournalStore: JournalEntryRecord[] =
+  globalForDev.__devMemoryJournalStore ?? (globalForDev.__devMemoryJournalStore = [...initialDevJournal]);
+
+// ----------------------------------------------------
+// PROJECT DATA ACCESS METHODS
+// ----------------------------------------------------
+
+export async function getPublicProjectsList(options?: {
+  category?: string;
+  featuredOnly?: boolean;
+}): Promise<ProjectRecord[]> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      let query = adminClient
+        .from('projects')
+        .select('*')
+        .neq('status', 'archived')
+        .order('is_featured', { ascending: false })
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (options?.category && options.category !== 'All') {
+        query = query.eq('category', options.category);
+      }
+      if (options?.featuredOnly) {
+        query = query.eq('is_featured', true);
+      }
+
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        return data as ProjectRecord[];
+      }
+    } catch {}
+  }
+
+  // Graceful fallback to in-memory store
+  let list = devMemoryProjectsStore.filter((p) => p.status !== 'archived');
+  if (options?.category && options.category !== 'All') {
+    list = list.filter((p) => p.category === options.category);
+  }
+  if (options?.featuredOnly) {
+    list = list.filter((p) => p.is_featured);
+  }
+
+  return list.sort((a, b) => {
+    if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
+    return a.display_order - b.display_order;
+  });
+}
+
+export async function getProjectBySlug(slug: string): Promise<{
+  project: ProjectRecord | null;
+  relatedJournal: JournalEntryRecord[];
+}> {
+  const adminClient = getSupabaseAdmin();
+  let project: ProjectRecord | null = null;
+  let relatedJournal: JournalEntryRecord[] = [];
+
+  if (adminClient) {
+    try {
+      const { data: projData } = await adminClient
+        .from('projects')
+        .select('*')
+        .eq('slug', slug)
+        .maybeSingle();
+
+      if (projData) {
+        project = projData as ProjectRecord;
+        const { data: journalData } = await adminClient
+          .from('journal_entries')
+          .select('*')
+          .eq('status', 'published')
+          .or(`project_id.eq.${projData.id},project_name.eq.${projData.name}`)
+          .order('published_at', { ascending: false });
+
+        if (journalData) {
+          relatedJournal = journalData as JournalEntryRecord[];
+        }
+        return { project, relatedJournal };
+      }
+    } catch {}
+  }
+
+  // Fallback
+  project = devMemoryProjectsStore.find((p) => p.slug === slug) || null;
+  if (project) {
+    relatedJournal = devMemoryJournalStore
+      .filter((j) => j.status === 'published' && (j.project_id === project?.id || j.project_name === project?.name))
+      .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+  }
+
+  return { project, relatedJournal };
+}
+
+export async function getAllProjectsForAdmin(): Promise<ProjectRecord[]> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const { data, error } = await adminClient
+        .from('projects')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        return data as ProjectRecord[];
+      }
+    } catch {}
+  }
+
+  return [...devMemoryProjectsStore].sort((a, b) => a.display_order - b.display_order);
+}
+
+export async function createProject(
+  payload: Partial<ProjectRecord>
+): Promise<{ success: boolean; data?: ProjectRecord; error?: string }> {
+  if (!payload.name || !payload.name.trim()) {
+    return { success: false, error: 'Project name is required.' };
+  }
+  const name = payload.name.trim();
+  const slug = payload.slug ? slugify(payload.slug) : slugify(name);
+
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const { data, error } = await adminClient
+        .from('projects')
+        .insert({
+          slug,
+          name,
+          tagline: payload.tagline || 'Software Development Project',
+          category: payload.category || 'Web & Platform',
+          role: payload.role || 'Lead Developer',
+          short_description: payload.short_description || '',
+          full_description: payload.full_description || '',
+          cover_image: payload.cover_image || null,
+          technologies: payload.technologies || [],
+          highlights: payload.highlights || [],
+          start_date: payload.start_date || new Date().getFullYear().toString(),
+          completion_date: payload.completion_date || null,
+          status: payload.status || 'in_development',
+          github_url: payload.github_url || null,
+          demo_url: payload.demo_url || null,
+          docs_url: payload.docs_url || null,
+          external_links: payload.external_links || [],
+          is_featured: Boolean(payload.is_featured),
+          display_order: Number(payload.display_order || 0),
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        return { success: true, data: data as ProjectRecord };
+      }
+      if (error?.code === '23505') {
+        return { success: false, error: 'A project with this URL slug already exists.' };
+      }
+    } catch {}
+  }
+
+  // Fallback
+  if (devMemoryProjectsStore.some((p) => p.slug === slug)) {
+    return { success: false, error: 'A project with this URL slug already exists.' };
+  }
+
+  const newProj: ProjectRecord = {
+    id: `proj-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    slug,
+    name,
+    tagline: payload.tagline || 'Software Development Project',
+    category: payload.category || 'Web & Platform',
+    role: payload.role || 'Lead Developer',
+    short_description: payload.short_description || '',
+    full_description: payload.full_description || '',
+    cover_image: payload.cover_image,
+    technologies: payload.technologies || [],
+    highlights: payload.highlights || [],
+    start_date: payload.start_date || new Date().getFullYear().toString(),
+    completion_date: payload.completion_date,
+    status: payload.status || 'in_development',
+    github_url: payload.github_url,
+    demo_url: payload.demo_url,
+    docs_url: payload.docs_url,
+    external_links: payload.external_links || [],
+    is_featured: Boolean(payload.is_featured),
+    display_order: Number(payload.display_order || 0),
+    created_at: new Date().toISOString(),
+  };
+
+  devMemoryProjectsStore.unshift(newProj);
+  return { success: true, data: newProj };
+}
+
+export async function updateProject(
+  id: string,
+  updates: Partial<ProjectRecord>
+): Promise<{ success: boolean; data?: ProjectRecord; error?: string }> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const updateData: any = { ...updates, updated_at: new Date().toISOString() };
+      delete updateData.id;
+      if (updateData.slug) updateData.slug = slugify(updateData.slug);
+
+      const { data, error } = await adminClient
+        .from('projects')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (!error && data) {
+        return { success: true, data: data as ProjectRecord };
+      }
+    } catch {}
+  }
+
+  const idx = devMemoryProjectsStore.findIndex((p) => p.id === id);
+  if (idx === -1) {
+    return { success: false, error: 'Project not found.' };
+  }
+
+  devMemoryProjectsStore[idx] = {
+    ...devMemoryProjectsStore[idx],
+    ...updates,
+    slug: updates.slug ? slugify(updates.slug) : devMemoryProjectsStore[idx].slug,
+    updated_at: new Date().toISOString(),
+  };
+
+  return { success: true, data: devMemoryProjectsStore[idx] };
+}
+
+export async function deleteProject(id: string): Promise<{ success: boolean; error?: string }> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const { error } = await adminClient.from('projects').delete().eq('id', id);
+      if (!error) return { success: true };
+    } catch {}
+  }
+
+  const idx = devMemoryProjectsStore.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    devMemoryProjectsStore.splice(idx, 1);
+    return { success: true };
+  }
+
+  return { success: false, error: 'Project not found.' };
+}
+
+// ----------------------------------------------------
+// DEVELOPER JOURNAL DATA ACCESS METHODS
+// ----------------------------------------------------
+
+export async function getPublicJournalEntries(
+  page = 1,
+  limit = 10,
+  options?: { category?: string; tag?: string; search?: string; projectId?: string }
+): Promise<{ entries: JournalEntryRecord[]; total: number; hasMore: boolean }> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      let query = adminClient
+        .from('journal_entries')
+        .select('*', { count: 'exact' })
+        .eq('status', 'published')
+        .order('is_pinned', { ascending: false })
+        .order('published_at', { ascending: false });
+
+      if (options?.category && options.category !== 'All') {
+        query = query.eq('category', options.category);
+      }
+      if (options?.projectId) {
+        query = query.eq('project_id', options.projectId);
+      }
+      if (options?.tag) {
+        query = query.contains('tags', [options.tag]);
+      }
+      if (options?.search && options.search.trim()) {
+        const s = options.search.trim();
+        query = query.or(`title.ilike.%${s}%,summary.ilike.%${s}%,content.ilike.%${s}%`);
+      }
+
+      const { data, count, error } = await query.range(from, to);
+      if (!error && data && data.length > 0) {
+        return {
+          entries: data as JournalEntryRecord[],
+          total: count || data.length,
+          hasMore: count ? to + 1 < count : false,
+        };
+      }
+    } catch {}
+  }
+
+  // Fallback
+  let list = devMemoryJournalStore.filter((j) => j.status === 'published');
+  if (options?.category && options.category !== 'All') {
+    list = list.filter((j) => j.category === options.category);
+  }
+  if (options?.projectId) {
+    list = list.filter((j) => j.project_id === options.projectId);
+  }
+  if (options?.tag) {
+    list = list.filter((j) => j.tags.includes(options.tag!));
+  }
+  if (options?.search && options.search.trim()) {
+    const s = options.search.trim().toLowerCase();
+    list = list.filter(
+      (j) =>
+        j.title.toLowerCase().includes(s) ||
+        j.summary.toLowerCase().includes(s) ||
+        j.content.toLowerCase().includes(s)
+    );
+  }
+
+  list.sort((a, b) => {
+    if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+    return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
+  });
+
+  const total = list.length;
+  const from = (page - 1) * limit;
+  const paged = list.slice(from, from + limit);
+
+  return {
+    entries: paged,
+    total,
+    hasMore: from + limit < total,
+  };
+}
+
+export async function getJournalEntryBySlug(
+  slug: string,
+  includeDraft = false
+): Promise<JournalEntryRecord | null> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      let query = adminClient.from('journal_entries').select('*').eq('slug', slug);
+      if (!includeDraft) {
+        query = query.eq('status', 'published');
+      }
+      const { data, error } = await query.maybeSingle();
+      if (!error && data) {
+        return data as JournalEntryRecord;
+      }
+    } catch {}
+  }
+
+  const found = devMemoryJournalStore.find((j) => j.slug === slug);
+  if (!found) return null;
+  if (!includeDraft && found.status !== 'published') return null;
+  return found;
+}
+
+export async function getAllJournalEntriesForAdmin(options?: {
+  status?: string;
+  category?: string;
+  search?: string;
+}): Promise<JournalEntryRecord[]> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      let query = adminClient
+        .from('journal_entries')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('published_at', { ascending: false });
+
+      if (options?.status && options.status !== 'all') {
+        query = query.eq('status', options.status);
+      }
+      if (options?.category && options.category !== 'all') {
+        query = query.eq('category', options.category);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        let result = data as JournalEntryRecord[];
+        if (options?.search && options.search.trim()) {
+          const s = options.search.trim().toLowerCase();
+          result = result.filter(
+            (j) => j.title.toLowerCase().includes(s) || j.summary.toLowerCase().includes(s)
+          );
+        }
+        return result;
+      }
+    } catch {}
+  }
+
+  let list = [...devMemoryJournalStore];
+  if (options?.status && options.status !== 'all') {
+    list = list.filter((j) => j.status === options.status);
+  }
+  if (options?.category && options.category !== 'all') {
+    list = list.filter((j) => j.category === options.category);
+  }
+  if (options?.search && options.search.trim()) {
+    const s = options.search.trim().toLowerCase();
+    list = list.filter(
+      (j) => j.title.toLowerCase().includes(s) || j.summary.toLowerCase().includes(s)
+    );
+  }
+
+  return list.sort((a, b) => {
+    if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+    return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
+  });
+}
+
+export async function createJournalEntry(
+  payload: Partial<JournalEntryRecord>
+): Promise<{ success: boolean; data?: JournalEntryRecord; error?: string }> {
+  if (!payload.title || !payload.title.trim()) {
+    return { success: false, error: 'Title is required for journal entries.' };
+  }
+  if (!payload.content || !payload.content.trim()) {
+    return { success: false, error: 'Content is required.' };
+  }
+
+  const title = payload.title.trim();
+  const slug = payload.slug ? slugify(payload.slug) : slugify(title);
+  const summary = payload.summary?.trim() || payload.content.trim().slice(0, 180) + '...';
+
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const { data, error } = await adminClient
+        .from('journal_entries')
+        .insert({
+          slug,
+          title,
+          summary,
+          content: payload.content.trim(),
+          category: payload.category || 'Features',
+          tags: payload.tags || [],
+          cover_image: payload.cover_image || null,
+          github_url: payload.github_url || null,
+          demo_url: payload.demo_url || null,
+          project_id: payload.project_id || null,
+          project_name: payload.project_name || null,
+          external_links: payload.external_links || [],
+          status: payload.status || 'published',
+          is_pinned: Boolean(payload.is_pinned),
+          published_at: payload.published_at || new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        return { success: true, data: data as JournalEntryRecord };
+      }
+      if (error?.code === '23505') {
+        return { success: false, error: 'A journal update with this URL slug already exists.' };
+      }
+    } catch {}
+  }
+
+  // Fallback
+  if (devMemoryJournalStore.some((j) => j.slug === slug)) {
+    return { success: false, error: 'A journal update with this URL slug already exists.' };
+  }
+
+  const newEntry: JournalEntryRecord = {
+    id: `journal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    slug,
+    title,
+    summary,
+    content: payload.content.trim(),
+    category: payload.category || 'Features',
+    tags: payload.tags || [],
+    cover_image: payload.cover_image,
+    github_url: payload.github_url,
+    demo_url: payload.demo_url,
+    project_id: payload.project_id || null,
+    project_name: payload.project_name,
+    external_links: payload.external_links || [],
+    status: payload.status || 'published',
+    is_pinned: Boolean(payload.is_pinned),
+    views_count: 0,
+    published_at: payload.published_at || new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  };
+
+  devMemoryJournalStore.unshift(newEntry);
+  return { success: true, data: newEntry };
+}
+
+export async function updateJournalEntry(
+  id: string,
+  updates: Partial<JournalEntryRecord>
+): Promise<{ success: boolean; data?: JournalEntryRecord; error?: string }> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const updateData: any = { ...updates, updated_at: new Date().toISOString() };
+      delete updateData.id;
+      if (updateData.slug) updateData.slug = slugify(updateData.slug);
+
+      const { data, error } = await adminClient
+        .from('journal_entries')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (!error && data) {
+        return { success: true, data: data as JournalEntryRecord };
+      }
+    } catch {}
+  }
+
+  const idx = devMemoryJournalStore.findIndex((j) => j.id === id);
+  if (idx === -1) {
+    return { success: false, error: 'Journal entry not found.' };
+  }
+
+  devMemoryJournalStore[idx] = {
+    ...devMemoryJournalStore[idx],
+    ...updates,
+    slug: updates.slug ? slugify(updates.slug) : devMemoryJournalStore[idx].slug,
+    updated_at: new Date().toISOString(),
+  };
+
+  return { success: true, data: devMemoryJournalStore[idx] };
+}
+
+export async function deleteJournalEntry(id: string): Promise<{ success: boolean; error?: string }> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const { error } = await adminClient.from('journal_entries').delete().eq('id', id);
+      if (!error) return { success: true };
+    } catch {}
+  }
+
+  const idx = devMemoryJournalStore.findIndex((j) => j.id === id);
+  if (idx !== -1) {
+    devMemoryJournalStore.splice(idx, 1);
+    return { success: true };
+  }
+
+  return { success: false, error: 'Journal entry not found.' };
+}
+
+export async function toggleJournalStatus(
+  id: string,
+  newStatus: 'published' | 'draft'
+): Promise<{ success: boolean; error?: string }> {
+  return updateJournalEntry(id, { status: newStatus });
+}
+
+export async function toggleJournalPin(
+  id: string,
+  isPinned: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return updateJournalEntry(id, { is_pinned: isPinned });
+}
+
+export async function incrementJournalViews(slug: string): Promise<void> {
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const { data } = await adminClient
+        .from('journal_entries')
+        .select('id, views_count')
+        .eq('slug', slug)
+        .maybeSingle();
+
+      if (data) {
+        await adminClient
+          .from('journal_entries')
+          .update({ views_count: (data.views_count || 0) + 1 })
+          .eq('id', data.id);
+        return;
+      }
+    } catch {}
+  }
+
+  const entry = devMemoryJournalStore.find((j) => j.slug === slug);
+  if (entry) {
+    entry.views_count = (entry.views_count || 0) + 1;
+  }
+}
+

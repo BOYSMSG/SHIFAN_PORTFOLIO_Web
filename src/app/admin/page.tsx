@@ -16,6 +16,8 @@ import {
   ArrowRight,
   CheckCircle,
   Sparkles,
+  BookOpen,
+  Plus,
 } from 'lucide-react';
 import { FeedbackRecord } from '@/lib/supabase';
 import { AnalyticsMetrics } from '@/lib/analytics';
@@ -75,20 +77,34 @@ export default function AdminOverviewPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/admin/journal"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-electric-blue to-electric-cyan hover:shadow-cyan-glow transition-all"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Publish Journal</span>
+          </Link>
+          <Link
+            href="/admin/projects"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-midnight-900 hover:text-electric-blue border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Manage Projects</span>
+          </Link>
           <Link
             href="/admin/feedback"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white text-midnight-900 hover:text-electric-blue border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-midnight-900 hover:text-electric-blue border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all"
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>Manage Feedback</span>
+            <span>Feedback</span>
           </Link>
           <Link
             href="/admin/analytics"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-electric-blue to-electric-cyan hover:shadow-cyan-glow transition-all"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-midnight-900 hover:text-electric-blue border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all"
           >
             <TrendingUp className="w-3.5 h-3.5" />
-            <span>Detailed Analytics</span>
+            <span>Analytics</span>
           </Link>
         </div>
       </div>

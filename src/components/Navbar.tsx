@@ -13,8 +13,9 @@ interface NavbarProps {
 
 const NAV_LINKS = [
   { label: 'About', id: 'about' },
+  { label: 'Journal', id: 'journal', href: '/journal' },
+  { label: 'Projects', id: 'projects', href: '/projects' },
   { label: 'Journey', id: 'journey' },
-  { label: 'Projects', id: 'projects' },
   { label: 'Ventures', id: 'ventures' },
   { label: 'Skills', id: 'skills' },
   { label: 'Services', id: 'services' },
@@ -132,7 +133,7 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
     };
   }, []);
 
-  const handleLinkClick = (id: string, e?: React.MouseEvent) => {
+  const handleLinkClick = (id: string, href?: string, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (onNavigate) {
       onNavigate(id);
@@ -142,6 +143,10 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const targetTop = Math.max(0, element.getBoundingClientRect().top + window.scrollY - 88);
         window.scrollTo({ top: targetTop, behavior: prefersReduced ? 'instant' : 'smooth' });
+      } else if (href) {
+        window.location.href = href;
+      } else {
+        window.location.href = `/${id === 'hero' ? '' : '#' + id}`;
       }
     }
     if (mobileMenuOpen) {
@@ -163,7 +168,7 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
           {/* 1. Brand Area (Left) */}
           <a
             href="#hero"
-            onClick={(e) => handleLinkClick('hero', e)}
+            onClick={(e) => handleLinkClick('hero', undefined, e)}
             className="flex items-center gap-2.5 flex-shrink-0 group rounded-lg py-1 pr-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue focus-visible:ring-offset-2"
           >
             <div className="relative w-8 h-8 rounded-full overflow-hidden border border-electric-cyan/70 shadow-sm transition-transform duration-300 group-hover:scale-105 flex-shrink-0">
@@ -193,8 +198,8 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
               return (
                 <a
                   key={link.id}
-                  href={`#${link.id}`}
-                  onClick={(e) => handleLinkClick(link.id, e)}
+                  href={link.href || `#${link.id}`}
+                  onClick={(e) => handleLinkClick(link.id, link.href, e)}
                   className={`relative px-2 lg:px-2.5 xl:px-3 py-1.5 rounded-xl text-xs xl:text-[13px] font-medium transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue focus-visible:ring-offset-1 ${
                     isActive
                       ? 'text-electric-blue font-semibold'
@@ -218,7 +223,7 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
           <div className="hidden sm:flex items-center flex-shrink-0">
             <a
               href="#contact"
-              onClick={(e) => handleLinkClick('contact', e)}
+              onClick={(e) => handleLinkClick('contact', undefined, e)}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-electric-blue to-electric-cyan hover:shadow-[0_0_18px_rgba(0,201,216,0.28)] transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue focus-visible:ring-offset-2"
             >
               <span>Let&apos;s Connect</span>
@@ -290,7 +295,7 @@ export default function Navbar({ activeSection = 'hero', onNavigate }: NavbarPro
                   return (
                     <button
                       key={link.id}
-                      onClick={() => handleLinkClick(link.id)}
+                      onClick={() => handleLinkClick(link.id, link.href)}
                       className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-blue ${
                         isActive
                           ? 'bg-electric-ice text-electric-blue border border-electric-blue/20'

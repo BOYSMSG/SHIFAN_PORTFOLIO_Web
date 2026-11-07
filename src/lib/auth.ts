@@ -501,6 +501,14 @@ export function verifySessionToken(
     if (!data.expiresAt || Date.now() > data.expiresAt) return null;
     if (!data.email) return null;
 
+    // Strict IP Binding: Verify request IP hash matches token IP hash
+    if (currentIp) {
+      const currentIpHash = hashIp(currentIp);
+      if (data.ipHash && data.ipHash !== currentIpHash) {
+        return null;
+      }
+    }
+
     return { email: data.email, ipHash: data.ipHash || '' };
   } catch {
     return null;

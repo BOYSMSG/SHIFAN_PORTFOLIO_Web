@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { GraduationCap, Milestone, Award, Calendar, BookOpen } from 'lucide-react';
+import { GraduationCap, Milestone, Award, Calendar, BookOpen, ArrowRight, Terminal } from 'lucide-react';
 import { PORTFOLIO_DATA } from '@/data/portfolioData';
 
 export default function JourneySection() {
@@ -144,6 +145,30 @@ export default function JourneySection() {
               </motion.div>
             );
           })}
+        </div>
+
+        {/* Live Developer Journal Callout Banner */}
+        <div className="max-w-4xl mx-auto mt-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-midnight-900 to-[#0e213b] text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6 border border-electric-blue/30">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-electric-blue/20 border border-electric-cyan/30 text-electric-cyan text-xs font-bold">
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Real-Time Development Activity</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+              Looking for Daily Work &amp; Progress Updates?
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+              Explore the public Developer Journal to see what I built today, bugs I resolved, infrastructure upgrades, and live GitHub repositories in real-time.
+            </p>
+          </div>
+
+          <Link
+            href="/journal"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold text-midnight-900 bg-electric-cyan hover:bg-white hover:shadow-[0_0_20px_rgba(0,245,255,0.4)] transition-all flex-shrink-0"
+          >
+            <span>Open Dev Journal</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
 
       </div>
