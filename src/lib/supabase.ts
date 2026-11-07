@@ -1433,7 +1433,7 @@ const initialDevProjects: ProjectRecord[] = [
     ],
     start_date: '2023',
     status: 'active',
-    demo_url: 'https://cobbledrock.pokefun.in/',
+    demo_url: 'https://cobblemon.pokefun.in/',
     is_featured: true,
     display_order: 2,
     created_at: new Date(Date.now() - 280 * 24 * 3600 * 1000).toISOString(),

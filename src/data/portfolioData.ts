@@ -130,7 +130,7 @@ export const PORTFOLIO_DATA = {
         "Iterated on configurations directly from player feedback and bug reports",
       ],
       techStack: ["Cobblemon Modding", "Server Config", "Community Support", "Discord API"],
-      url: "https://cobbledrock.pokefun.in/",
+      url: "https://cobblemon.pokefun.in/",
     },
     {
       id: "pokedrock",

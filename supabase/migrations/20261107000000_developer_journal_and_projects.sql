@@ -118,7 +118,7 @@ VALUES
     ARRAY['Cobblemon Modding', 'Server Config', 'GeyserMC', 'Linux', 'Discord API'],
     ARRAY['Tested and tuned Cobblemon mod files and compatibility settings', 'Built Discord player support channels and troubleshooting guides', 'Iterated on configurations directly from player feedback and bug reports'],
     'active',
-    'https://cobbledrock.pokefun.in/',
+    'https://cobblemon.pokefun.in/',
     TRUE,
     2
   ),

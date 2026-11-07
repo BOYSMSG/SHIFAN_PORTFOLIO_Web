@@ -106,7 +106,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="https://cobbledrock.pokefun.in/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center justify-between">
+                <a href="https://cobblemon.pokefun.in/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center justify-between">
                   <span>CobbleDrock Mod Platform</span>
                   <span className="text-[10px] font-mono text-slate-500">Live Service</span>
                 </a>
