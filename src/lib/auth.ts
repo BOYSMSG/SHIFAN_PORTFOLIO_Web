@@ -144,12 +144,9 @@ export function getClientIp(req: Request): string {
 
   const headers = req.headers;
 
-  // Cloudflare Connecting IP is ONLY accepted if CLOUDFLARE_PROXY is explicitly enabled
-  const isCloudflare = process.env.CLOUDFLARE_PROXY === 'true' || process.env.CLOUDFLARE_PROXY === '1';
-  if (isCloudflare) {
-    const cfIp = headers.get('cf-connecting-ip');
-    if (cfIp && isValidIp(cfIp)) return cfIp.trim();
-  }
+  // Cloudflare Connecting IP is prioritized when behind Cloudflare proxy
+  const cfIp = headers.get('cf-connecting-ip');
+  if (cfIp && isValidIp(cfIp)) return cfIp.trim();
 
   // Nginx / Standard proxy header (overwritten by reverse-proxy with $remote_addr)
   const realIp = headers.get('x-real-ip');
@@ -500,14 +497,6 @@ export function verifySessionToken(
     const data = JSON.parse(raw);
     if (!data.expiresAt || Date.now() > data.expiresAt) return null;
     if (!data.email) return null;
-
-    // Strict IP Binding: Verify request IP hash matches token IP hash
-    if (currentIp) {
-      const currentIpHash = hashIp(currentIp);
-      if (data.ipHash && data.ipHash !== currentIpHash) {
-        return null;
-      }
-    }
 
     return { email: data.email, ipHash: data.ipHash || '' };
   } catch {

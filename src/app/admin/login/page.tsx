@@ -47,9 +47,8 @@ export default function AdminLoginPage() {
         // Direct authorized login!
         setInfoMessage('Authentication successful! Welcome, Mohd Shifan. Redirecting to Owner Console...');
         setTimeout(() => {
-          router.push('/admin');
-          router.refresh();
-        }, 500);
+          window.location.href = '/admin';
+        }, 300);
         return;
       }
 
@@ -95,9 +94,8 @@ export default function AdminLoginPage() {
 
       setInfoMessage('Verification passed! Establishing secure session...');
       setTimeout(() => {
-        router.push('/admin');
-        router.refresh();
-      }, 700);
+        window.location.href = '/admin';
+      }, 300);
     } catch {
       setError('Network error during passcode validation.');
     } finally {
