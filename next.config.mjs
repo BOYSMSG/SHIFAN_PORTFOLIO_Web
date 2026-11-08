@@ -7,6 +7,12 @@ const nextConfig = {
   generateBuildId: async () => 'build-' + Date.now(),
   // Isolate dev cache from production build so `next build` never wipes out running dev CSS
   distDir: isDev ? '.next-dev' : '.next',
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: '**' },
+    ],
+  },
 };
 
 export default nextConfig;
