@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminSessionFromRequest } from '@/lib/auth';
+import { resolveCoverImageUrl } from '@/lib/imageResolver';
 import {
   getAllJournalEntriesForAdmin,
   createJournalEntry,
@@ -43,6 +44,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Journal markdown content is required.' }, { status: 400 });
     }
 
+    if (body.cover_image) {
+      body.cover_image = await resolveCoverImageUrl(body.cover_image);
+    }
+
     const result = await createJournalEntry(body);
     if (!result.success) {
       return NextResponse.json({ error: result.error || 'Failed to create journal update.' }, { status: 400 });
@@ -67,6 +72,9 @@ export async function PUT(req: NextRequest) {
     }
 
     const { id, ...updates } = body;
+    if (updates.cover_image) {
+      updates.cover_image = await resolveCoverImageUrl(updates.cover_image);
+    }
     const result = await updateJournalEntry(id, updates);
     if (!result.success) {
       return NextResponse.json({ error: result.error || 'Failed to update journal entry.' }, { status: 400 });

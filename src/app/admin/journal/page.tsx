@@ -48,6 +48,45 @@ export default function AdminJournalPage() {
   const [githubUrl, setGithubUrl] = useState('');
   const [demoUrl, setDemoUrl] = useState('');
   const [coverImage, setCoverImage] = useState('');
+  const [isResolvingImage, setIsResolvingImage] = useState(false);
+
+  const handleCoverImageChange = async (val: string) => {
+    let clean = val.trim();
+    // Auto-extract from HTML snippet if user pasted full <img> or <a> code
+    const imgMatch = clean.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch && imgMatch[1]) {
+      clean = imgMatch[1].trim();
+    }
+    const aMatch = clean.match(/<a[^>]+href=["']([^"']+)["']/i);
+    if (aMatch && aMatch[1] && (!imgMatch || imgMatch[1].endsWith('...'))) {
+      clean = aMatch[1].trim();
+    }
+    const bbMatch = clean.match(/\[img\](.*?)\[\/img\]/i);
+    if (bbMatch && bbMatch[1]) {
+      clean = bbMatch[1].trim();
+    }
+
+    setCoverImage(clean);
+
+    if (clean.includes('ibb.co/') && !clean.includes('i.ibb.co/')) {
+      setIsResolvingImage(true);
+      try {
+        const res = await fetch('/api/resolve-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: clean })
+        });
+        const data = await res.json();
+        if (data.resolved && data.resolved !== clean) {
+          setCoverImage(data.resolved);
+        }
+      } catch (err) {
+        console.warn('Auto image resolve failed:', err);
+      } finally {
+        setIsResolvingImage(false);
+      }
+    }
+  };
   const [summary, setSummary] = useState('');
   const [content, setContent] = useState('');
   const [status, setStatus] = useState<'published' | 'draft'>('published');
@@ -431,16 +470,50 @@ export default function AdminJournalPage() {
             {/* Cover Image & Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Cover Image URL (optional)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Cover Image URL (optional)
+                  </label>
+                  {isResolvingImage && (
+                    <span className="text-[11px] text-electric-blue flex items-center gap-1 font-medium animate-pulse">
+                      <span className="inline-block w-2 h-2 rounded-full bg-electric-blue animate-ping" />
+                      Converting ImgBB...
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={coverImage}
-                  onChange={(e) => setCoverImage(e.target.value)}
-                  placeholder="/assets/... or https://..."
+                  onChange={(e) => handleCoverImageChange(e.target.value)}
+                  onPaste={(e) => {
+                    const text = e.clipboardData.getData('text');
+                    if (text) {
+                      e.preventDefault();
+                      handleCoverImageChange(text);
+                    }
+                  }}
+                  placeholder="Paste https://ibb.co/..., HTML, or direct image URL"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-electric-blue"
                 />
+                {coverImage && (
+                  <div className="mt-2 flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div className="relative w-20 h-12 rounded-lg overflow-hidden bg-slate-900 border border-slate-200 flex-shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={coverImage}
+                        alt="Cover preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold text-slate-700 truncate">Preview</p>
+                      <p className="text-[10px] text-slate-400 truncate">{coverImage}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1.5">
